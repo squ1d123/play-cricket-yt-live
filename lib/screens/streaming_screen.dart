@@ -28,8 +28,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
   String? _rtmpUrl;
 
   String _teamName = 'De Beauville Dugongs';
-  String _score = '166/4';
-  String _result = 'Won by 4 runs';
+  String _score = '166/4 (16.4)';
+  String _result = '20 overs remain';
 
   @override
   void initState() {
@@ -100,7 +100,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
     
     try {
       _cameraController = CameraController(
-        ResolutionPreset.veryHigh,
+        ResolutionPreset.ultraHigh,
         enableAudio: true,
       );
 
@@ -215,9 +215,9 @@ class _StreamingScreenState extends State<StreamingScreen> {
     );
 
     final texts = <_OverlayLine>[];
-    if (_teamName.isNotEmpty) texts.add(_OverlayLine(_teamName, 36 * scale, Colors.white, FontWeight.bold));
-    if (_score.isNotEmpty) texts.add(_OverlayLine(_score, 64 * scale, Colors.green, FontWeight.bold));
-    if (_result.isNotEmpty) texts.add(_OverlayLine(_result, 28 * scale, const Color(0xFFFFA500), FontWeight.normal));
+    if (_teamName.isNotEmpty) texts.add(_OverlayLine(_teamName.toUpperCase(), 36 * scale, Colors.white, FontWeight.bold));
+    if (_score.isNotEmpty) texts.add(_OverlayLine(_score, 64 * scale, Colors.white, FontWeight.bold));
+    if (_result.isNotEmpty) texts.add(_OverlayLine(_result.toUpperCase(), 28 * scale, Colors.orange, FontWeight.normal));
 
     if (texts.isEmpty) return null;
 
