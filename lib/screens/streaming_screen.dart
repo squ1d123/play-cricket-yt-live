@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui' as ui;
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -214,8 +215,17 @@ class _StreamingScreenState extends State<StreamingScreen> {
       final boundary = _overlayKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) return;
 
+      final recorder = ui.PictureRecorder();
+      final canvas = Canvas(recorder);
+
       final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+      // TODO: this still needs to be fixed
+      canvas.drawImage(image, const Offset(0.0, 500.0), Paint());
+      Picture picture = recorder.endRecording();
+      final fullImage = await picture.toImage(1920, 1080);
+
+      final byteData = await fullImage.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return;
 
       final overlay = byteData.buffer.asUint8List();
