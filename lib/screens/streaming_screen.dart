@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rtmp_streaming/camera.dart';
 import '../services/stream_settings_service.dart';
@@ -33,7 +34,24 @@ class _StreamingScreenState extends State<StreamingScreen> {
   @override
   void initState() {
     super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _checkSettingsAndInitCamera();
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    _cameraController?.dispose();
+    super.dispose();
   }
 
   Future<void> _checkSettingsAndInitCamera() async {
@@ -82,7 +100,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
     
     try {
       _cameraController = CameraController(
-        ResolutionPreset.high,
+        ResolutionPreset.veryHigh,
         enableAudio: true,
       );
 
@@ -127,7 +145,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
         await _updateStreamOverlay();
         await _cameraController!.startVideoStreaming(
           _rtmpUrl!,
-          bitrate: 1500 * 1024,
+          bitrate: 4500 * 1024,
         );
         setState(() => _isStreaming = true);
       } catch (e) {
@@ -246,12 +264,6 @@ class _StreamingScreenState extends State<StreamingScreen> {
       textDirection: TextDirection.ltr,
     )..layout();
     return tp.width;
-  }
-
-  @override
-  void dispose() {
-    _cameraController?.dispose();
-    super.dispose();
   }
 
   String get _currentCameraLabel {
