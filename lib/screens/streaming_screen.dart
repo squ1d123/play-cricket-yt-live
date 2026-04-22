@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rtmp_streaming/camera.dart';
@@ -26,10 +27,27 @@ class _StreamingScreenState extends State<StreamingScreen> {
   int _currentCameraIndex = 0;
   String? _error;
   String? _rtmpUrl;
+  final GlobalKey _overlayKey = GlobalKey();
 
   String _teamName = 'De Beauville Dugongs';
-  String _score = '166/4 (16.4)';
+  String _score = '166/4';
+  String _overs = '16.4';
   String _result = '20 overs remain';
+
+  String _batsman1Name = 'John Smith';
+  int _batsman1Runs = 45;
+  int _batsman1Balls = 32;
+  bool _batsman1OnStrike = true;
+
+  String _batsman2Name = 'Mike Jones';
+  int _batsman2Runs = 23;
+  int _batsman2Balls = 18;
+  bool _batsman2OnStrike = false;
+
+  String _bowlerName = 'Sameer Magan';
+  int _bowlerWickets = 1;
+  int _bowlerRuns = 22;
+  int _bowlerOvers = 3;
 
   @override
   void initState() {
@@ -100,7 +118,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
     
     try {
       _cameraController = CameraController(
-        ResolutionPreset.ultraHigh,
+        ResolutionPreset.veryHigh,
         enableAudio: true,
       );
 
@@ -192,78 +210,24 @@ class _StreamingScreenState extends State<StreamingScreen> {
   Future<void> _updateStreamOverlay() async {
     if (_cameraController == null || !_isInitialized) return;
 
-    final overlay = await _renderOverlayBitmap();
-    if (overlay == null) return;
+    try {
+      final boundary = _overlayKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      if (boundary == null) return;
 
-    final cacheDir = await getApplicationDocumentsDirectory();
-    final file = File('${cacheDir.path}/stream_overlay.png');
-    await file.writeAsBytes(overlay);
+      final image = await boundary.toImage(pixelRatio: 3.0);
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      if (byteData == null) return;
 
-    await _cameraController!.setFilter(23, filePath: file.path);
-  }
+      final overlay = byteData.buffer.asUint8List();
 
-  Future<List<int>?> _renderOverlayBitmap() async {
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    const width = 1920.0;
-    const height = 1080.0;
-    const scale = width / 1920;
+      final cacheDir = await getApplicationDocumentsDirectory();
+      final file = File('${cacheDir.path}/stream_overlay.png');
+      await file.writeAsBytes(overlay);
 
-    canvas.drawRect(
-      const Rect.fromLTWH(0, 0, width, height),
-      Paint()..color = Colors.transparent,
-    );
-
-    final texts = <_OverlayLine>[];
-    if (_teamName.isNotEmpty) texts.add(_OverlayLine(_teamName.toUpperCase(), 36 * scale, Colors.white, FontWeight.bold));
-    if (_score.isNotEmpty) texts.add(_OverlayLine(_score, 64 * scale, Colors.white, FontWeight.bold));
-    if (_result.isNotEmpty) texts.add(_OverlayLine(_result.toUpperCase(), 28 * scale, Colors.orange, FontWeight.normal));
-
-    if (texts.isEmpty) return null;
-
-    const baseX = 32.0 * scale;
-    const baseY = 80.0 * scale;
-    const paddingH = 32.0 * scale;
-    const paddingV = 24.0 * scale;
-    const cornerRadius = 16.0 * scale;
-    const lineHeight = 48.0 * scale;
-    const spacing = 8.0 * scale;
-
-    final maxTextWidth = texts.map((t) => _measureText(canvas, t.text, t.fontSize)).reduce((a, b) => a > b ? a : b);
-    final totalHeight = texts.length * lineHeight + (texts.length - 1) * spacing;
-    final rectWidth = maxTextWidth + paddingH * 2;
-    final rectHeight = totalHeight + paddingV * 2;
-
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(baseX, baseY, rectWidth, rectHeight),
-        Radius.circular(cornerRadius),
-      ),
-      Paint()..color = Colors.black.withValues(alpha: 0.7),
-    );
-
-    var currentY = baseY + paddingV + lineHeight * 0.7;
-    for (final line in texts) {
-      final tp = TextPainter(
-        text: TextSpan(text: line.text, style: TextStyle(fontSize: line.fontSize, color: line.color, fontWeight: line.fontWeight)),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      tp.paint(canvas, Offset(baseX + paddingH, currentY));
-      currentY += lineHeight + spacing;
+      await _cameraController!.setFilter(23, filePath: file.path);
+    } catch (e) {
+      debugPrint('Overlay capture failed: $e');
     }
-
-    final picture = recorder.endRecording();
-    final img = await picture.toImage(width.toInt(), height.toInt());
-    final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-    return byteData?.buffer.asUint8List();
-  }
-
-  double _measureText(Canvas canvas, String text, double fontSize) {
-    final tp = TextPainter(
-      text: TextSpan(text: text, style: TextStyle(fontSize: fontSize)),
-      textDirection: TextDirection.ltr,
-    )..layout();
-    return tp.width;
   }
 
   String get _currentCameraLabel {
@@ -273,7 +237,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
     return 'Back ${_currentCameraIndex + 1}';
   }
 
-  @override
+@override
   Widget build(BuildContext context) {
     if (_checkingSettings) {
       return const Scaffold(
@@ -330,7 +294,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
         ),
       );
     }
-
+    
     return Scaffold(
       body: Stack(
         children: [
@@ -341,28 +305,12 @@ class _StreamingScreenState extends State<StreamingScreen> {
           else
             const Center(child: CircularProgressIndicator()),
           
-          CricketScoreOverlay(
-            teamName: _teamName,
-            score: _score,
-            result: _result,
-          ),
-          
-          Positioned(
-            top: 90,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                '$_currentCameraLabel (${_cameras?.length ?? 0} cams)',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                ),
-              ),
+          RepaintBoundary(
+            key: _overlayKey,
+            child: CricketScoreOverlay(
+              teamName: _teamName,
+              score: _score,
+              result: _result,
             ),
           ),
           
@@ -513,12 +461,4 @@ class _StreamingScreenState extends State<StreamingScreen> {
       ),
     );
   }
-}
-
-class _OverlayLine {
-  final String text;
-  final double fontSize;
-  final Color color;
-  final FontWeight fontWeight;
-  _OverlayLine(this.text, this.fontSize, this.color, this.fontWeight);
 }
