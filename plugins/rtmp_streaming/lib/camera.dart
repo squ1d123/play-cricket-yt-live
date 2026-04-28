@@ -915,6 +915,42 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// Set zoom level. Use [getZoomRange] to get valid min/max values.
+  Future<void> setZoom(double level) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'setZoom was called on uninitialized CameraController',
+      );
+    }
+    try {
+      await _channel.invokeMethod<void>(
+          'setZoom', <String, dynamic>{'level': level});
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Get the zoom range for the current camera. Returns {min, max}.
+  Future<Map<String, double>> getZoomRange() async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'getZoomRange was called on uninitialized CameraController',
+      );
+    }
+    try {
+      final data = (await _channel
+          .invokeMapMethod<String, dynamic>('getZoomRange'))!;
+      return {
+        'min': (data['min'] as num).toDouble(),
+        'max': (data['max'] as num).toDouble(),
+      };
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
   /// switch Audio
   ///
   /// This switch Audio

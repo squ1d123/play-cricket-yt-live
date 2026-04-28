@@ -157,6 +157,16 @@ class MethodCallHandlerImplNew(
                 getCameraView()?.setRtmpShouldSendPings(call.argument("enabled"), result)
                     ?: result.error("no_camera", "Camera not initialized", null)
             }
+            "setZoom" -> {
+                Log.i("Stuff", "setZoom")
+                getCameraView()?.setZoom(call.argument<Double>("level")?.toFloat(), result)
+                    ?: result.error("no_camera", "Camera not initialized", null)
+            }
+            "getZoomRange" -> {
+                Log.i("Stuff", "getZoomRange")
+                getCameraView()?.getZoomRange(result)
+                    ?: result.error("no_camera", "Camera not initialized", null)
+            }
             "switchCamera" -> {
                 Log.i("Stuff", "switchCamera")
                 getCameraView()?.switchCamera(call.argument("cameraName"),result)

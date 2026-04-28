@@ -30,6 +30,9 @@ class _StreamingScreenState extends State<StreamingScreen> {
   final GlobalKey _overlayKey = GlobalKey();
   final YouTubeLiveService _ytService = YouTubeLiveService();
   bool _useYouTubeApi = false;
+  double _zoomLevel = 0;
+  double _zoomMin = 0;
+  double _zoomMax = 1;
 
   // ignore: prefer_final_fields - these will be updated by web scraper
   String _teamName = 'De Beauville Dugongs';
@@ -118,6 +121,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
         enableAudio: true,
       );
       await _cameraController!.initialize(_cameras![cameraIndex]);
+      await _loadZoomRange();
       setState(() {
         _isInitialized = true;
         _currentCameraIndex = cameraIndex;
@@ -253,11 +257,23 @@ class _StreamingScreenState extends State<StreamingScreen> {
     try {
       await _cameraController!.switchCamera(_cameras![index].name!);
       setState(() => _currentCameraIndex = index);
+      await _loadZoomRange();
     } catch (e) {
       _showSnack('Camera switch failed: $e');
     } finally {
       _isSwitchingCamera = false;
     }
+  }
+
+  Future<void> _loadZoomRange() async {
+    try {
+      final range = await _cameraController!.getZoomRange();
+      setState(() {
+        _zoomMin = range['min']!;
+        _zoomMax = range['max']!;
+        _zoomLevel = _zoomMin;
+      });
+    } catch (_) {}
   }
 
   Future<void> _updateStreamOverlay() async {
@@ -478,6 +494,28 @@ class _StreamingScreenState extends State<StreamingScreen> {
               ),
             ),
           ),
+
+          // Zoom slider
+          if (_isInitialized && _zoomMax > _zoomMin)
+            Positioned(
+              right: 16,
+              top: 80,
+              bottom: 140,
+              child: RotatedBox(
+                quarterTurns: 3,
+                child: Slider(
+                  value: _zoomLevel.clamp(_zoomMin, _zoomMax),
+                  min: _zoomMin,
+                  max: _zoomMax,
+                  activeColor: Colors.red,
+                  inactiveColor: Colors.white30,
+                  onChanged: (v) {
+                    setState(() => _zoomLevel = v);
+                    _cameraController?.setZoom(v);
+                  },
+                ),
+              ),
+            ),
         ],
       ),
     );

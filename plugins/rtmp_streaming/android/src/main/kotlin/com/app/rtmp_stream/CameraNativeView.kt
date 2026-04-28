@@ -950,6 +950,32 @@ class CameraNativeView(
         result.success(null)
     }
 
+    fun setZoom(level: Float?, result: MethodChannel.Result) {
+        try {
+            if (level == null) {
+                result.error("setZoom", "level is required", null)
+                return
+            }
+            rtmpCamera.setZoom(level)
+            result.success(null)
+        } catch (e: Exception) {
+            result.error("setZoom", e.message, null)
+        }
+    }
+
+    fun getZoomRange(result: MethodChannel.Result) {
+        try {
+            val range = rtmpCamera.zoomRange
+            val ret = hashMapOf<String, Any>(
+                "min" to range.lower.toFloat(),
+                "max" to range.upper.toFloat()
+            )
+            result.success(ret)
+        } catch (e: Exception) {
+            result.error("getZoomRange", e.message, null)
+        }
+    }
+
     override fun getView(): View {
         return glView
     }
