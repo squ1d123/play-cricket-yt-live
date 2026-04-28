@@ -195,6 +195,63 @@ class _StreamingScreenState extends State<StreamingScreen> {
     }
   }
 
+  void _showCameraPicker() {
+    if (_cameras == null || _cameras!.length < 2) return;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.black87,
+      builder: (ctx) {
+        int backCount = 0;
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: _cameras!.asMap().entries.map((entry) {
+              final i = entry.key;
+              final cam = entry.value;
+              String label;
+              if (cam.lensDirection == CameraLensDirection.front) {
+                label = 'Front';
+              } else {
+                backCount++;
+                label = 'Back $backCount';
+              }
+              final selected = i == _currentCameraIndex;
+              return ListTile(
+                leading: Icon(
+                  cam.lensDirection == CameraLensDirection.front
+                      ? Icons.camera_front
+                      : Icons.camera_rear,
+                  color: selected ? Colors.red : Colors.white,
+                ),
+                title: Text(label, style: TextStyle(color: selected ? Colors.red : Colors.white)),
+                trailing: selected ? const Icon(Icons.check, color: Colors.red) : null,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  if (i != _currentCameraIndex) _selectCamera(i);
+                },
+              );
+            }).toList(),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _selectCamera(int index) async {
+    if (_isSwitchingCamera) return;
+    if (_cameraController == null || !_cameraController!.value.isInitialized!) return;
+
+    _isSwitchingCamera = true;
+    try {
+      await _cameraController!.switchCamera(_cameras![index].name!);
+      setState(() => _currentCameraIndex = index);
+    } catch (e) {
+      _showSnack('Camera switch failed: $e');
+    } finally {
+      _isSwitchingCamera = false;
+    }
+  }
+
   Future<void> _updateStreamOverlay() async {
     if (_cameraController == null || !_isInitialized) return;
 
@@ -378,7 +435,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
                           ),
                         IconButton(
                           icon: const Icon(Icons.cameraswitch, color: Colors.white),
-                          onPressed: _cameras != null && _cameras!.length > 1 ? _switchCamera : null,
+                          onPressed: _cameras != null && _cameras!.length > 1 ? _showCameraPicker : null,
                         ),
                       ],
                     ),
