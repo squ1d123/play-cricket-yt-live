@@ -605,10 +605,8 @@ class CameraNativeView(
               imageObjectFilterRender.setImage(
                 BitmapFactory.decodeFile(filePath)
               )
-              imageObjectFilterRender.setScale(50f, 50f)
-              imageObjectFilterRender.setPosition(TranslateTo.TOP)
-              spriteGestureController.setBaseObjectFilterRender(imageObjectFilterRender)
-              spriteGestureController.setPreventMoveOutside(false)
+              imageObjectFilterRender.setScale(100f, 100f)
+              imageObjectFilterRender.setPosition(TranslateTo.BOTTOM)
               currentFilter = imageObjectFilterRender
               currentFilterType = type
               result.success(null)
