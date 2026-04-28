@@ -203,8 +203,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
       builder: (ctx) {
         int backCount = 0;
         return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: ListView(
+            shrinkWrap: true,
             children: _cameras!.asMap().entries.map((entry) {
               final i = entry.key;
               final cam = entry.value;
@@ -217,14 +217,22 @@ class _StreamingScreenState extends State<StreamingScreen> {
               }
               final selected = i == _currentCameraIndex;
               return ListTile(
+                selected: selected,
+                selectedTileColor: Colors.red.withValues(alpha: 0.2),
                 leading: Icon(
                   cam.lensDirection == CameraLensDirection.front
                       ? Icons.camera_front
                       : Icons.camera_rear,
                   color: selected ? Colors.red : Colors.white,
                 ),
-                title: Text(label, style: TextStyle(color: selected ? Colors.red : Colors.white)),
-                trailing: selected ? const Icon(Icons.check, color: Colors.red) : null,
+                title: Text(
+                  label,
+                  style: TextStyle(
+                    color: selected ? Colors.red : Colors.white,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                trailing: selected ? const Icon(Icons.check_circle, color: Colors.red) : null,
                 onTap: () {
                   Navigator.pop(ctx);
                   if (i != _currentCameraIndex) _selectCamera(i);
