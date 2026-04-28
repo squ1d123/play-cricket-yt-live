@@ -70,7 +70,10 @@ class YouTubeLiveService {
             enableAutoStart: true,
             enableAutoStop: true,
           ),
-          status: yt.LiveBroadcastStatus(privacyStatus: privacy),
+          status: yt.LiveBroadcastStatus(
+            privacyStatus: privacy,
+            selfDeclaredMadeForKids: false,
+          ),
         ),
         ['snippet', 'contentDetails', 'status'],
       );
