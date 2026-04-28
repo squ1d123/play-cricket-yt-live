@@ -54,7 +54,7 @@ class YouTubeLiveService {
   /// Returns null on failure.
   Future<String?> createAndBindStream({
     required String title,
-    String privacy = 'unlisted',
+    String privacy = 'public',
   }) async {
     if (_api == null) return null;
 
