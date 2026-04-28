@@ -172,6 +172,10 @@ class _StreamingScreenState extends State<StreamingScreen> {
     final success = await _ytService.signIn();
     setState(() => _useYouTubeApi = success);
     _showSnack(success ? 'YouTube connected' : 'YouTube sign-in failed');
+    // Re-initialize camera after sign-in activity returns
+    if (success && _cameras != null && _cameras!.isNotEmpty) {
+      await _initializeCamera(_currentCameraIndex);
+    }
   }
 
   Future<void> _switchCamera() async {

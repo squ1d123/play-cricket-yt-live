@@ -85,35 +85,39 @@ class CricketScoreOverlay extends StatelessWidget {
           Expanded(
             child: Align(
               alignment: Alignment.centerRight,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    bowlerName,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerRight,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      bowlerName,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$bowlerWickets/$bowlerRuns',
-                    style: const TextStyle(
-                      color: Colors.red,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 4),
+                    Text(
+                      '$bowlerWickets/$bowlerRuns',
+                      style: const TextStyle(
+                        color: Colors.red,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 2),
-                  Text(
-                    '($bowlerOvers)',
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 14,
+                    const SizedBox(width: 2),
+                    Text(
+                      '($bowlerOvers)',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.7),
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
@@ -132,12 +136,15 @@ class CricketScoreOverlay extends StatelessWidget {
             padding: EdgeInsets.only(right: 2),
             child: Icon(Icons.sports_cricket, color: Colors.white, size: 14),
           ),
-        Text(
-          name,
-          style: TextStyle(
-            color: onStrike ? Colors.white : Colors.white70,
-            fontSize: 14,
-            fontWeight: onStrike ? FontWeight.bold : FontWeight.normal,
+        Flexible(
+          child: Text(
+            name,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: onStrike ? Colors.white : Colors.white70,
+              fontSize: 14,
+              fontWeight: onStrike ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ),
         const SizedBox(width: 4),

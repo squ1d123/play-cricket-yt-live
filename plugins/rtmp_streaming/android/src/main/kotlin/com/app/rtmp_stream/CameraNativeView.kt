@@ -883,9 +883,8 @@ class CameraNativeView(
         cameraName = targetCamera
 
         Log.d("CameraNativeView", "startPreview: $preset")
-        if (isSurfaceCreated) {
+        if (isSurfaceCreated && activity != null) {
             try {
-//                Log.d("error", targetCamera)
                 val previewSize = CameraUtils.computeBestPreviewSize(activity, cameraName, preset)
                 val size = previewSize["size"] as Size
                 rtmpCamera.startPreview(
@@ -901,6 +900,9 @@ class CameraNativeView(
                         "CameraAccessException"
                     )
                 }
+                return
+            } catch (e: Exception) {
+                Log.e("CameraNativeView", "startPreview failed: ${e.message}")
                 return
             }
         }
