@@ -121,11 +121,31 @@ class _StreamingScreenState extends State<StreamingScreen> {
       _teamName = data.homeTeam;
       _score = data.homeScore;
       _overs = data.homeOvers;
-      // Show away team info in the bowler section
-      _bowlerName = data.awayTeam;
-      _bowlerRuns = int.tryParse(data.awayScore.split('/').first) ?? 0;
-      _bowlerWickets = int.tryParse(data.awayScore.split('/').last) ?? 0;
-      _bowlerOvers = int.tryParse(data.awayOvers.split('.').first) ?? 0;
+
+      // Populate batsmen from API data
+      if (data.batsmen.length >= 1) {
+        final b1 = data.batsmen[0];
+        _batsman1Name = b1.name;
+        _batsman1Runs = b1.runs;
+        _batsman1Balls = b1.balls;
+        _batsman1OnStrike = true;
+      }
+      if (data.batsmen.length >= 2) {
+        final b2 = data.batsmen[1];
+        _batsman2Name = b2.name;
+        _batsman2Runs = b2.runs;
+        _batsman2Balls = b2.balls;
+      }
+
+      // Populate bowler from API data (best figures)
+      if (data.bowlers.isNotEmpty) {
+        final topBowler = data.bowlers.reduce((a, b) =>
+            a.wickets > b.wickets ? a : b);
+        _bowlerName = topBowler.name;
+        _bowlerWickets = topBowler.wickets;
+        _bowlerRuns = topBowler.runs;
+        _bowlerOvers = topBowler.overs;
+      }
     });
 
     if (_isStreaming) {

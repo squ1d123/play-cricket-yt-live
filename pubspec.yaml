@@ -49,6 +49,9 @@ dependencies:
   # HTML parsing for play-cricket scraping
   html: ^0.15.4
 
+  # DES encryption for resultsvault API token
+  dart_des: ^1.0.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

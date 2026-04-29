@@ -27,12 +27,16 @@ Camera/Mic → Composite (RepaintBoundary) → ffmpeg RTMP pipe → YouTube Live
 - Return RTMP ingest URL
 
 ### 2. Play-Cricket Scraper (`lib/services/play_cricket_scraper.dart`)
-- Fetches match data from play-cricket.com result URLs
-- URL format: `https://<club>.play-cricket.com/website/results/<match_id>`
-- Parses HTML to extract: team names, scores (runs/wickets), overs
-- Uses regex fallback for score patterns like "166 / 4 (16.0)"
-- Returns `MatchData` object with home/away team info
+- Uses the ResultsVault API (same API the play-cricket scorecard widget uses)
+- API base: `https://api.resultsvault.co.uk/rv/`
+- Auth: `x-ias-api-request` header = DES-ECB encrypted timestamp using shared secret `5BD4A72CE1934BA5A629CD98` (first 8 chars as key), base64 encoded
+- Flow:
+  1. Extract match ID from play-cricket URL (`/results/{id}`)
+  2. Map to ResultsVault internal ID via: `GET /rv/mappings/4/12/{externalId}/?apiid=1003&sportid=1`
+  3. Fetch full scorecard: `GET /rv/130000/matches/{rvMatchId}/?apiid=1003&strmflg=3`
+- Returns `MatchData` with team scores, individual batsmen (name, runs, balls), and bowlers (name, wickets, runs, overs)
 - Auto-refresh every 30 seconds via `Timer.periodic` in streaming screen
+- Dependencies: `dart_des` for DES-ECB encryption, `http` for requests
 
 ### 3. Stream Settings (`lib/services/stream_settings_service.dart`)
 - Persists RTMP URL, stream key, and scorecard URL via `shared_preferences`
@@ -59,6 +63,7 @@ Camera/Mic → Composite (RepaintBoundary) → ffmpeg RTMP pipe → YouTube Live
 | `googleapis` | YouTube Data API v3 |
 | `http` | Web requests |
 | `html` | HTML parsing (play-cricket scraping) |
+| `dart_des` | DES-ECB encryption for ResultsVault API token |
 | `rtmp_streaming` | Camera + RTMP streaming (local plugin) |
 | `shared_preferences` | Settings persistence |
 | `path_provider` | File system paths |
