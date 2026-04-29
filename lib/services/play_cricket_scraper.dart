@@ -198,14 +198,12 @@ class PlayCricketScraper {
     return perfs
         .where((p) =>
             p['__type'] == 'Batting:http://api.resultsvault.com' &&
-            p['dismissal_text'] != 'dnb' &&
-            p['runs'] != null)
+            p['dismissal_id'] == 1)
         .map((p) => BatsmanData(
               name: (p['player_name'] ?? '') as String,
               runs: (p['runs'] ?? 0) as int,
               balls: (p['balls'] ?? 0) as int,
-              notOut: p['dismissal_text'] == 'no' ||
-                  p['dismissal_text'] == 'rtno',
+              notOut: true,
             ))
         .toList();
   }
