@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:rtmp_streaming/camera.dart';
 import '../services/stream_settings_service.dart';
 import '../services/youtube_live_service.dart';
+import '../services/play_cricket_scraper.dart';
 import '../widgets/cricket_score_overlay.dart';
 
 class StreamingScreen extends StatefulWidget {
@@ -33,6 +35,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
   double _zoomLevel = 0;
   double _zoomMin = 0;
   double _zoomMax = 1;
+  Timer? _scrapeTimer;
+  String? _scorecardUrl;
 
   // ignore: prefer_final_fields - these will be updated by web scraper
   String _teamName = 'De Beauville Dugongs';
@@ -66,6 +70,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
 
   @override
   void dispose() {
+    _scrapeTimer?.cancel();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.landscapeLeft,
@@ -81,6 +86,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
       _cameras = await availableCameras();
       final hasSettings = await StreamSettingsService.hasSettings();
       _rtmpUrl = await StreamSettingsService.getFullRtmpUrl();
+      _scorecardUrl = await StreamSettingsService.getScorecardUrl();
 
       setState(() {
         _hasSettings = hasSettings;
@@ -90,11 +96,36 @@ class _StreamingScreenState extends State<StreamingScreen> {
       if (_cameras != null && _cameras!.isNotEmpty) {
         _initializeCamera(0);
       }
+
+      // Start periodic scraping if URL is configured
+      if (_scorecardUrl != null && _scorecardUrl!.isNotEmpty) {
+        _fetchScoreData();
+        _scrapeTimer = Timer.periodic(
+          const Duration(seconds: 30),
+          (_) => _fetchScoreData(),
+        );
+      }
     } catch (e) {
       setState(() {
         _error = 'Init failed: $e';
         _checkingSettings = false;
       });
+    }
+  }
+
+  Future<void> _fetchScoreData() async {
+    if (_scorecardUrl == null || _scorecardUrl!.isEmpty) return;
+    final data = await PlayCricketScraper.fetchMatchData(_scorecardUrl!);
+    if (data == null) return;
+
+    setState(() {
+      if (data.homeTeam.isNotEmpty) _teamName = data.homeTeam;
+      if (data.homeScore.isNotEmpty) _score = data.homeScore;
+      if (data.homeOvers.isNotEmpty) _overs = data.homeOvers;
+    });
+
+    if (_isStreaming) {
+      await _updateStreamOverlay();
     }
   }
 

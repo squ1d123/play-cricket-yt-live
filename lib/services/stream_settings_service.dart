@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class StreamSettingsService {
   static const String _rtmpUrlKey = 'rtmp_url';
   static const String _streamKeyKey = 'stream_key';
+  static const String _scorecardUrlKey = 'scorecard_url';
 
   static Future<String?> getRtmpUrl() async {
     final prefs = await SharedPreferences.getInstance();
@@ -12,6 +13,16 @@ class StreamSettingsService {
   static Future<String?> getStreamKey() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_streamKeyKey);
+  }
+
+  static Future<String?> getScorecardUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_scorecardUrlKey);
+  }
+
+  static Future<void> saveScorecardUrl(String url) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_scorecardUrlKey, url);
   }
 
   static Future<void> saveSettings(String rtmpUrl, String streamKey) async {

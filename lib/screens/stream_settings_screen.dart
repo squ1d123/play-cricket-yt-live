@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/stream_settings_service.dart';
+import '../services/play_cricket_scraper.dart';
 
 class StreamSettingsScreen extends StatefulWidget {
   const StreamSettingsScreen({super.key});
@@ -12,7 +13,10 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _rtmpUrlController = TextEditingController();
   final _streamKeyController = TextEditingController();
+  final _scorecardUrlController = TextEditingController();
   bool _isLoading = true;
+  bool _isTesting = false;
+  String? _testResult;
 
   @override
   void initState() {
@@ -23,21 +27,26 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   Future<void> _loadSettings() async {
     final rtmpUrl = await StreamSettingsService.getRtmpUrl();
     final streamKey = await StreamSettingsService.getStreamKey();
-    
+    final scorecardUrl = await StreamSettingsService.getScorecardUrl();
+
     _rtmpUrlController.text = rtmpUrl ?? 'rtmps://a.rtmps.youtube.com/live2';
     _streamKeyController.text = streamKey ?? '';
-    
+    _scorecardUrlController.text = scorecardUrl ?? '';
+
     setState(() => _isLoading = false);
   }
 
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     await StreamSettingsService.saveSettings(
       _rtmpUrlController.text.trim(),
       _streamKeyController.text.trim(),
     );
-    
+    await StreamSettingsService.saveScorecardUrl(
+      _scorecardUrlController.text.trim(),
+    );
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Settings saved!')),
@@ -45,10 +54,34 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     }
   }
 
+  Future<void> _testScorecardUrl() async {
+    final url = _scorecardUrlController.text.trim();
+    if (url.isEmpty) return;
+
+    setState(() {
+      _isTesting = true;
+      _testResult = null;
+    });
+
+    final data = await PlayCricketScraper.fetchMatchData(url);
+
+    setState(() {
+      _isTesting = false;
+      if (data != null && data.homeScore.isNotEmpty) {
+        _testResult =
+            '✓ ${data.homeTeam} ${data.homeScore} (${data.homeOvers} ov) vs '
+            '${data.awayTeam} ${data.awayScore} (${data.awayOvers} ov)';
+      } else {
+        _testResult = '✗ Could not parse score data from URL';
+      }
+    });
+  }
+
   @override
   void dispose() {
     _rtmpUrlController.dispose();
     _streamKeyController.dispose();
+    _scorecardUrlController.dispose();
     super.dispose();
   }
 
@@ -69,13 +102,61 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                 child: ListView(
                   children: [
                     const Text(
-                      'Configure your YouTube RTMP settings',
+                      'Scorecard URL',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _scorecardUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Play-Cricket Match URL',
+                        hintText:
+                            'https://yourclub.play-cricket.com/website/results/1234567',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _isTesting ? null : _testScorecardUrl,
+                          child: _isTesting
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text('Test URL'),
+                        ),
+                      ],
+                    ),
+                    if (_testResult != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          _testResult!,
+                          style: TextStyle(
+                            color: _testResult!.startsWith('✓')
+                                ? Colors.green
+                                : Colors.red,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
                     const SizedBox(height: 24),
+                    const Text(
+                      'RTMP Settings',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _rtmpUrlController,
                       decoration: const InputDecoration(
@@ -115,14 +196,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                         padding: const EdgeInsets.all(16),
                       ),
                       child: const Text('Save Settings'),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'How to find your stream key:\n'
-                      '1. Go to YouTube Studio\n'
-                      '2. Click Create → Go live\n'
-                      '3. Look in Stream settings',
-                      style: TextStyle(color: Colors.grey),
                     ),
                   ],
                 ),

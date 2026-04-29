@@ -46,6 +46,9 @@ dependencies:
   googleapis: ^13.2.0
   http: ^1.2.2
 
+  # HTML parsing for play-cricket scraping
+  html: ^0.15.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
