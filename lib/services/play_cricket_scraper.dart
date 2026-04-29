@@ -63,8 +63,17 @@ class PlayCricketScraper {
   static String _generateToken() {
     final timestamp =
         (DateTime.now().millisecondsSinceEpoch ~/ 1000 - 60).toString();
-    final des = DES(key: _sharedSecret.substring(0, 8).codeUnits, mode: DESMode.ECB);
-    final encrypted = des.encrypt(timestamp.codeUnits);
+    // Manually PKCS5 pad the timestamp
+    final input = timestamp.codeUnits.toList();
+    final padLen = 8 - (input.length % 8);
+    for (int i = 0; i < padLen; i++) {
+      input.add(padLen);
+    }
+    final des3 = DES3(
+        key: _sharedSecret.codeUnits,
+        mode: DESMode.ECB,
+        paddingType: DESPaddingType.None);
+    final encrypted = des3.encrypt(input);
     return base64Encode(encrypted);
   }
 
