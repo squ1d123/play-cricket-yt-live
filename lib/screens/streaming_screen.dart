@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rtmp_streaming/camera.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import '../services/stream_settings_service.dart';
 import '../services/youtube_live_service.dart';
 import '../services/play_cricket_scraper.dart';
@@ -59,6 +60,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
   @override
   void initState() {
     super.initState();
+    WakelockPlus.enable();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
       DeviceOrientation.landscapeRight,
@@ -69,6 +71,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
 
   @override
   void dispose() {
+    WakelockPlus.disable();
     _scrapeTimer?.cancel();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,

@@ -41,6 +41,9 @@ dependencies:
   shared_preferences: ^2.2.2
   path_provider: ^2.1.2
 
+  # Keep screen on
+  wakelock_plus: ^1.2.8
+
   # YouTube Live API
   google_sign_in: ^6.2.2
   googleapis: ^13.2.0
