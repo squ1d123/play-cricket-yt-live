@@ -38,24 +38,23 @@ class _StreamingScreenState extends State<StreamingScreen> {
   Timer? _scrapeTimer;
   String? _scorecardUrl;
 
-  // ignore: prefer_final_fields - these will be updated by web scraper
-  String _teamName = 'De Beauville Dugongs';
-  String _score = '166/4';
-  String _overs = '16.4';
+  String _teamName = '';
+  String _score = '';
+  String _overs = '';
 
-  String _batsman1Name = 'John Smith';
-  int _batsman1Runs = 45;
-  int _batsman1Balls = 32;
+  String _batsman1Name = '';
+  int _batsman1Runs = 0;
+  int _batsman1Balls = 0;
   bool _batsman1OnStrike = true;
 
-  String _batsman2Name = 'Mike Jones';
-  int _batsman2Runs = 23;
-  int _batsman2Balls = 18;
+  String _batsman2Name = '';
+  int _batsman2Runs = 0;
+  int _batsman2Balls = 0;
 
-  String _bowlerName = 'Sameer Magan';
-  int _bowlerWickets = 1;
-  int _bowlerRuns = 22;
-  int _bowlerOvers = 3;
+  String _bowlerName = '';
+  int _bowlerWickets = 0;
+  int _bowlerRuns = 0;
+  int _bowlerOvers = 0;
 
   @override
   void initState() {
@@ -119,9 +118,14 @@ class _StreamingScreenState extends State<StreamingScreen> {
     if (data == null) return;
 
     setState(() {
-      if (data.homeTeam.isNotEmpty) _teamName = data.homeTeam;
-      if (data.homeScore.isNotEmpty) _score = data.homeScore;
-      if (data.homeOvers.isNotEmpty) _overs = data.homeOvers;
+      _teamName = data.homeTeam;
+      _score = data.homeScore;
+      _overs = data.homeOvers;
+      // Show away team info in the bowler section
+      _bowlerName = data.awayTeam;
+      _bowlerRuns = int.tryParse(data.awayScore.split('/').first) ?? 0;
+      _bowlerWickets = int.tryParse(data.awayScore.split('/').last) ?? 0;
+      _bowlerOvers = int.tryParse(data.awayOvers.split('.').first) ?? 0;
     });
 
     if (_isStreaming) {
