@@ -86,7 +86,7 @@ class YouTubeLiveService {
         yt.LiveStream(
           snippet: yt.LiveStreamSnippet(title: '$title - Stream'),
           cdn: yt.CdnSettings(
-            frameRate: '30fps',
+            frameRate: '60fps',
             ingestionType: 'rtmp',
             resolution: '1080p',
           ),
