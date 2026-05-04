@@ -123,6 +123,11 @@ class _StreamingScreenState extends State<StreamingScreen> {
     final data = await PlayCricketScraper.fetchMatchData(_scorecardUrl!);
     if (data == null) return;
 
+    BowlerData? currentBowler;
+    try {
+      currentBowler = await PlayCricketScraper.fetchCurrentBowler(_scorecardUrl!);
+    } catch (_) {}
+
     setState(() {
       _teamName = data.battingTeam.isNotEmpty ? data.battingTeam : data.homeTeam;
       _score = data.battingScore.isNotEmpty ? data.battingScore : data.homeScore;
@@ -143,8 +148,13 @@ class _StreamingScreenState extends State<StreamingScreen> {
         _batsman2Balls = b2.balls;
       }
 
-      // Populate bowler from API data (best figures)
-      if (data.bowlers.isNotEmpty) {
+      // Populate bowler from ball-by-ball API (current bowler), fallback to best figures
+      if (currentBowler != null) {
+        _bowlerName = currentBowler.name;
+        _bowlerWickets = currentBowler.wickets;
+        _bowlerRuns = currentBowler.runs;
+        _bowlerOvers = currentBowler.overs;
+      } else if (data.bowlers.isNotEmpty) {
         final topBowler = data.bowlers.reduce((a, b) =>
             a.wickets > b.wickets ? a : b);
         _bowlerName = topBowler.name;

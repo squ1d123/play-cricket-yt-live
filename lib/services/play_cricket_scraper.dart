@@ -17,6 +17,7 @@ class MatchData {
   final String battingScore;
   final String battingOvers;
   final String bowlingTeam;
+  final int bowlingInningsNumber;
 
   const MatchData({
     this.homeTeam = '',
@@ -32,6 +33,7 @@ class MatchData {
     this.battingScore = '',
     this.battingOvers = '',
     this.bowlingTeam = '',
+    this.bowlingInningsNumber = 0,
   });
 }
 
@@ -136,6 +138,48 @@ class PlayCricketScraper {
     }
   }
 
+  static Future<BowlerData?> fetchCurrentBowler(String playCricketUrl) async {
+    final externalId = extractMatchId(playCricketUrl);
+    if (externalId == null) return null;
+
+    final rvMatchId = await _getResultsVaultMatchId(externalId);
+    if (rvMatchId == null) return null;
+
+    final matchData = await fetchMatchData(playCricketUrl);
+    if (matchData == null || matchData.bowlingInningsNumber == 0) return null;
+
+    final inningsNum = matchData.bowlingInningsNumber;
+    final resultId = matchData.bowlingInningsNumber;
+
+    final url = Uri.parse(
+        '$_apiBase$_masterEntityId/matches/$rvMatchId/?apiid=$_apiId&action=getballs&sportid=1&resultid=$resultId&inningsnumber=$inningsNum');
+
+    try {
+      final response = await http.get(url, headers: _headers);
+      if (response.statusCode != 200) return null;
+      final data = jsonDecode(response.body) as Map<String, dynamic>;
+      return _parseCurrentBowler(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static BowlerData? _parseCurrentBowler(Map<String, dynamic> data) {
+    final balls = data['BallbyBall'] as List? ?? data['balls'] as List? ?? [];
+    if (balls.isEmpty) return null;
+
+    final lastBall = balls.last as Map<String, dynamic>;
+    final bowlerName = lastBall['bowler_name'] ?? lastBall['bowler'] ?? '';
+    if (bowlerName.toString().isEmpty) return null;
+
+    return BowlerData(
+      name: bowlerName.toString(),
+      wickets: (lastBall['wicket'] ?? 0) as int,
+      runs: (lastBall['runs'] ?? 0) as int,
+      overs: ((lastBall['over'] ?? 0) as int),
+    );
+  }
+
   static MatchData _parseMatchData(Map<String, dynamic> data) {
     final teams = data['MatchTeams'] as List? ?? [];
     if (teams.isEmpty) {
@@ -167,6 +211,7 @@ class PlayCricketScraper {
     String bowlingTeamName;
     List<BatsmanData> batsmen;
     List<BowlerData> bowlers;
+    int bowlingInningsNum = 0;
 
     if (homeBattedFirst) {
       if (awayRuns > 0) {
@@ -174,11 +219,13 @@ class PlayCricketScraper {
         battingInnings = awayInnings;
         bowlingTeamName = (homeTeam['club_name'] ?? '') as String;
         bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((homeTeam as Map<String, dynamic>)['Innings'] as List?);
       } else {
         battingTeamName = (homeTeam['club_name'] ?? '') as String;
         battingInnings = homeInnings;
         bowlingTeamName = (awayTeam['club_name'] ?? '') as String;
         bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((awayTeam as Map<String, dynamic>)['Innings'] as List?);
       }
     } else {
       if (homeRuns > 0) {
@@ -186,11 +233,13 @@ class PlayCricketScraper {
         battingInnings = homeInnings;
         bowlingTeamName = (awayTeam['club_name'] ?? '') as String;
         bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((awayTeam as Map<String, dynamic>)['Innings'] as List?);
       } else {
         battingTeamName = (awayTeam['club_name'] ?? '') as String;
         battingInnings = awayInnings;
         bowlingTeamName = (homeTeam['club_name'] ?? '') as String;
         bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((homeTeam as Map<String, dynamic>)['Innings'] as List?);
       }
     }
 
@@ -213,6 +262,7 @@ class PlayCricketScraper {
       battingScore: battingInnings['score']!,
       battingOvers: battingInnings['overs']!,
       bowlingTeam: bowlingTeamName,
+      bowlingInningsNumber: bowlingInningsNum,
     );
   }
 
@@ -220,6 +270,12 @@ class PlayCricketScraper {
     if (innings == null || innings.isEmpty) return 0;
     final inn = innings.last as Map<String, dynamic>;
     return (inn['runs'] ?? 0) as int;
+  }
+
+  static int _getInningsNumber(List? innings) {
+    if (innings == null || innings.isEmpty) return 1;
+    final inn = innings.last as Map<String, dynamic>;
+    return (inn['innings_id'] ?? inn['id'] ?? inn['innings_number'] ?? 1) as int;
   }
 
   static Map<String, String> _parseInnings(Map<String, dynamic> team) {

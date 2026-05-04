@@ -1,0 +1,113 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:play_cricket_yt_live/services/play_cricket_scraper.dart';
+
+void main() {
+  group('PlayCricketScraper', () {
+    test('extractMatchId extracts ID from play-cricket URL', () {
+      final url = 'https://debeauvoirdugongs.play-cricket.com/website/results/7080352';
+      final matchId = PlayCricketScraper.extractMatchId(url);
+      expect(matchId, 7080352);
+    });
+
+    test('extractMatchId returns null for invalid URL', () {
+      final url = 'https://example.com/not-a-match';
+      final matchId = PlayCricketScraper.extractMatchId(url);
+      expect(matchId, null);
+    });
+
+    test('extractMatchId returns null for URL without ID', () {
+      final url = 'https://debeauvoirdugongs.play-cricket.com/website/results/';
+      final matchId = PlayCricketScraper.extractMatchId(url);
+      expect(matchId, null);
+    });
+
+    test('MatchData has correct fields', () {
+      final matchData = MatchData(
+        homeTeam: 'Home Team',
+        homeScore: '100/2',
+        homeOvers: '10',
+        awayTeam: 'Away Team',
+        awayScore: '150/1',
+        awayOvers: '15',
+        result: 'Away won',
+        battingTeam: 'Away Team',
+        battingScore: '150/1',
+        battingOvers: '15',
+        bowlingTeam: 'Home Team',
+        bowlingInningsNumber: 1,
+        batsmen: [
+          const BatsmanData(name: 'Player 1', runs: 50, balls: 30),
+          const BatsmanData(name: 'Player 2', runs: 25, balls: 20),
+        ],
+        bowlers: [
+          const BowlerData(name: 'Bowler 1', wickets: 1, runs: 30, overs: 4),
+        ],
+      );
+
+      expect(matchData.homeTeam, 'Home Team');
+      expect(matchData.awayTeam, 'Away Team');
+      expect(matchData.battingTeam, 'Away Team');
+      expect(matchData.bowlingTeam, 'Home Team');
+      expect(matchData.bowlingInningsNumber, 1);
+      expect(matchData.batsmen.length, 2);
+      expect(matchData.bowlers.length, 1);
+    });
+
+    test('BatsmanData has correct fields', () {
+      const batsman = BatsmanData(
+        name: 'John Doe',
+        runs: 42,
+        balls: 30,
+        notOut: true,
+      );
+
+      expect(batsman.name, 'John Doe');
+      expect(batsman.runs, 42);
+      expect(batsman.balls, 30);
+      expect(batsman.notOut, true);
+    });
+
+    test('BowlerData has correct fields', () {
+      const bowler = BowlerData(
+        name: 'Jane Smith',
+        wickets: 3,
+        runs: 25,
+        overs: 4,
+      );
+
+      expect(bowler.name, 'Jane Smith');
+      expect(bowler.wickets, 3);
+      expect(bowler.runs, 25);
+      expect(bowler.overs, 4);
+    });
+
+    test('MatchData default values', () {
+      const matchData = MatchData();
+
+      expect(matchData.homeTeam, '');
+      expect(matchData.homeScore, '');
+      expect(matchData.homeOvers, '');
+      expect(matchData.awayTeam, '');
+      expect(matchData.awayScore, '');
+      expect(matchData.awayOvers, '');
+      expect(matchData.result, '');
+      expect(matchData.battingTeam, '');
+      expect(matchData.battingScore, '');
+      expect(matchData.battingOvers, '');
+      expect(matchData.bowlingTeam, '');
+      expect(matchData.bowlingInningsNumber, 0);
+      expect(matchData.batsmen, isEmpty);
+      expect(matchData.bowlers, isEmpty);
+    });
+
+    test('fetchMatchData returns null for invalid URL', () async {
+      final result = await PlayCricketScraper.fetchMatchData('invalid-url');
+      expect(result, null);
+    });
+
+    test('fetchMatchData returns null for URL without match ID', () async {
+      final result = await PlayCricketScraper.fetchMatchData('https://play-cricket.com/');
+      expect(result, null);
+    });
+  });
+}
