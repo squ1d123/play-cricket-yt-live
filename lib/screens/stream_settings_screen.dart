@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/stream_settings_service.dart';
 import '../services/play_cricket_scraper.dart';
+import '../services/stream_settings_service.dart' show BitratePreset;
 
 class StreamSettingsScreen extends StatefulWidget {
   const StreamSettingsScreen({super.key});
@@ -14,6 +15,7 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   final _rtmpUrlController = TextEditingController();
   final _streamKeyController = TextEditingController();
   final _scorecardUrlController = TextEditingController();
+  final _bitrateController = TextEditingController();
   bool _isLoading = true;
   bool _isTesting = false;
   String? _testResult;
@@ -28,16 +30,25 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     final rtmpUrl = await StreamSettingsService.getRtmpUrl();
     final streamKey = await StreamSettingsService.getStreamKey();
     final scorecardUrl = await StreamSettingsService.getScorecardUrl();
+    final bitrate = await StreamSettingsService.getBitrate();
 
     _rtmpUrlController.text = rtmpUrl ?? 'rtmps://a.rtmps.youtube.com/live2';
     _streamKeyController.text = streamKey ?? '';
     _scorecardUrlController.text = scorecardUrl ?? '';
+
+    final preset = StreamSettingsService.presets.where((p) => p.bitrate == bitrate).firstOrNull;
+    _bitrateController.text = preset?.name ?? 'High (8 Mbps)';
 
     setState(() => _isLoading = false);
   }
 
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
+
+    final selectedPreset = StreamSettingsService.presets
+        .where((p) => p.name == _bitrateController.text)
+        .firstOrNull;
+    final bitrate = selectedPreset?.bitrate ?? StreamSettingsService.defaultBitrate;
 
     await StreamSettingsService.saveSettings(
       _rtmpUrlController.text.trim(),
@@ -46,6 +57,7 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     await StreamSettingsService.saveScorecardUrl(
       _scorecardUrlController.text.trim(),
     );
+    await StreamSettingsService.saveBitrate(bitrate);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -185,6 +197,27 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                           return 'Please enter stream key';
                         }
                         return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _bitrateController.text.isEmpty 
+                          ? 'High (8 Mbps)' 
+                          : _bitrateController.text,
+                      decoration: const InputDecoration(
+                        labelText: 'Stream Quality',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: StreamSettingsService.presets.map((preset) {
+                        return DropdownMenuItem(
+                          value: preset.name,
+                          child: Text(preset.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          _bitrateController.text = value;
+                        }
                       },
                     ),
                     const SizedBox(height: 24),
