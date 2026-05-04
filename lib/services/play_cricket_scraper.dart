@@ -177,7 +177,7 @@ class PlayCricketScraper {
     }
     if (balls.isEmpty) return null;
 
-    final lastBall = balls.last as Map<String, dynamic>;
+    final lastBall = balls[balls.length - 1] as Map<String, dynamic>;
     final bowlerId = lastBall['bowler_id'] as int?;
     if (bowlerId == null) return null;
 
@@ -243,32 +243,32 @@ class PlayCricketScraper {
         battingTeamName = (awayTeam['club_name'] ?? '') as String;
         battingInnings = awayInnings;
         bowlingTeamName = (homeTeam['club_name'] ?? '') as String;
-        bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
-        bowlingInningsNum = _getInningsNumber((homeTeam as Map<String, dynamic>)['Innings'] as List?);
-        bowlingResultId = homeTeam['result_id'] as int?;
+        bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingResultId = awayTeam['result_id'] as int?;
       } else {
         battingTeamName = (homeTeam['club_name'] ?? '') as String;
         battingInnings = homeInnings;
         bowlingTeamName = (awayTeam['club_name'] ?? '') as String;
-        bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
-        bowlingInningsNum = _getInningsNumber((awayTeam as Map<String, dynamic>)['Innings'] as List?);
-        bowlingResultId = awayTeam['result_id'] as int?;
+        bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingResultId = homeTeam['result_id'] as int?;
       }
     } else {
       if (homeRuns > 0) {
         battingTeamName = (homeTeam['club_name'] ?? '') as String;
         battingInnings = homeInnings;
         bowlingTeamName = (awayTeam['club_name'] ?? '') as String;
-        bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
         bowlingInningsNum = _getInningsNumber((homeTeam as Map<String, dynamic>)['Innings'] as List?);
         bowlingResultId = homeTeam['result_id'] as int?;
       } else {
         battingTeamName = (awayTeam['club_name'] ?? '') as String;
         battingInnings = awayInnings;
         bowlingTeamName = (homeTeam['club_name'] ?? '') as String;
-        bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
-        bowlingInningsNum = _getInningsNumber((homeTeam as Map<String, dynamic>)['Innings'] as List?);
-        bowlingResultId = homeTeam['result_id'] as int?;
+        bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingInningsNum = _getInningsNumber((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+        bowlingResultId = awayTeam['result_id'] as int?;
       }
     }
 
@@ -299,13 +299,13 @@ class PlayCricketScraper {
   static int _getInningsRuns(List? innings) {
     if (innings == null || innings.isEmpty) return 0;
     final inn = innings.last as Map<String, dynamic>;
-    return (inn['runs'] ?? 0) as int;
+    return ((inn['runs'] ?? 0) as num).toInt();
   }
 
   static int _getInningsNumber(List? innings) {
     if (innings == null || innings.isEmpty) return 1;
     final inn = innings.last as Map<String, dynamic>;
-    return (inn['innings_number'] ?? inn['innings_order'] ?? inn['id'] ?? 1) as int;
+    return ((inn['innings_number'] ?? inn['innings_order'] ?? inn['id'] ?? 1) as num).toInt();
   }
 
   static Map<String, String> _parseInnings(Map<String, dynamic> team) {
@@ -336,8 +336,8 @@ class PlayCricketScraper {
             p['dismissal_id'] == 1)
         .map((p) => BatsmanData(
               name: (p['player_name'] ?? '') as String,
-              runs: (p['runs'] ?? 0) as int,
-              balls: (p['balls'] ?? 0) as int,
+              runs: ((p['runs'] ?? 0) as num).toInt(),
+              balls: ((p['balls'] ?? 0) as num).toInt(),
               notOut: true,
             ))
         .toList();
@@ -350,11 +350,11 @@ class PlayCricketScraper {
     return perfs
         .where((p) => p['__type'] == 'Bowling:http://api.resultsvault.com')
         .map((p) => BowlerData(
-              bowlerId: (p['player_id'] as int?) ?? (p['id'] as int?),
+              bowlerId: (p['player_id'] as num?)?.toInt() ?? (p['id'] as num?)?.toInt(),
               name: (p['player_name'] ?? '') as String,
-              wickets: (p['wickets'] ?? 0) as int,
-              runs: (p['runs'] ?? 0) as int,
-              overs: (p['overs'] ?? 0) as int,
+              wickets: ((p['wickets'] ?? 0) as num).toInt(),
+              runs: ((p['runs'] ?? 0) as num).toInt(),
+              overs: ((p['overs'] ?? 0) as num).toInt(),
             ))
         .toList();
   }

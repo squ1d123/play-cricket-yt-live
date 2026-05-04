@@ -142,5 +142,13 @@ void main() {
       expect(bowler, isNotNull);
       expect(bowler!.bowlerId, 11959191);
     }, timeout: const Timeout(Duration(minutes: 1)));
+
+    test('fetchCurrentBowler returns bowler with expected ID from real API', () async {
+      const url = 'https://debeauvoirdugongs.play-cricket.com/website/results/7080346';
+      final bowler = await PlayCricketScraper.fetchCurrentBowler(url);
+
+      expect(bowler, isNotNull);
+      expect(bowler!.bowlerId, 11382051);
+    }, timeout: const Timeout(Duration(minutes: 1)));
   });
 }
