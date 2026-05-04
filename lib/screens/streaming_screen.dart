@@ -125,7 +125,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
 
     BowlerData? currentBowler;
     try {
-      currentBowler = await PlayCricketScraper.fetchCurrentBowler(_scorecardUrl!);
+      currentBowler = await PlayCricketScraper.fetchCurrentBowlerFromMatchData(data);
     } catch (_) {}
 
     setState(() {
@@ -134,7 +134,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
       _overs = data.battingOvers.isNotEmpty ? data.battingOvers : data.homeOvers;
 
       // Populate batsmen from API data
-      if (data.batsmen.length >= 1) {
+      if (data.batsmen.isNotEmpty) {
         final b1 = data.batsmen[0];
         _batsman1Name = b1.name;
         _batsman1Runs = b1.runs;

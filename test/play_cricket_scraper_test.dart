@@ -135,20 +135,35 @@ void main() {
       expect(bowler, isNull);
     });
 
-    test('fetchCurrentBowler returns bowler with expected ID from real API', () async {
+    test('fetchCurrentBowler returns bowler with expected ID from real API: 7080352', () async {
       const url = 'https://debeauvoirdugongs.play-cricket.com/website/results/7080352';
-      final bowler = await PlayCricketScraper.fetchCurrentBowler(url);
+      final matchData = await PlayCricketScraper.fetchMatchData(url);
+      final bowler = await PlayCricketScraper.fetchCurrentBowlerFromMatchData(matchData);
 
       expect(bowler, isNotNull);
       expect(bowler!.bowlerId, 11959191);
     }, timeout: const Timeout(Duration(minutes: 1)));
 
-    test('fetchCurrentBowler returns bowler with expected ID from real API', () async {
+    test('fetchCurrentBowler returns bowler with expected ID from real API: 7080346', () async {
       const url = 'https://debeauvoirdugongs.play-cricket.com/website/results/7080346';
-      final bowler = await PlayCricketScraper.fetchCurrentBowler(url);
+      final matchData = await PlayCricketScraper.fetchMatchData(url);
+      final bowler = await PlayCricketScraper.fetchCurrentBowlerFromMatchData(matchData);
 
       expect(bowler, isNotNull);
       expect(bowler!.bowlerId, 11382051);
+    }, timeout: const Timeout(Duration(minutes: 1)));
+
+    test('fetchCurrentBowler returns bowler with expected ID from real API: 7121431', () async {
+      const url = 'https://debeauvoirdugongs.play-cricket.com/website/results/7121431';
+      final matchData = await PlayCricketScraper.fetchMatchData(url);
+      final bowler = await PlayCricketScraper.fetchCurrentBowlerFromMatchData(matchData);
+
+      expect(bowler, isNotNull);
+      expect(bowler!.bowlerId, 12149347);
+      expect(bowler.name, "C Birchall");
+      expect(bowler.overs, 3);
+      expect(bowler.runs, 27);
+      expect(bowler.wickets, 1);
     }, timeout: const Timeout(Duration(minutes: 1)));
   });
 }

@@ -19,8 +19,10 @@ class MatchData {
   final String bowlingTeam;
   final int bowlingInningsNumber;
   final int? bowlingResultId;
+  final int rvMatchId;
 
   const MatchData({
+    this.rvMatchId = 0,
     this.homeTeam = '',
     this.homeScore = '',
     this.homeOvers = '',
@@ -136,24 +138,18 @@ class PlayCricketScraper {
       final response = await http.get(url, headers: _headers);
       if (response.statusCode != 200) return null;
       final data = jsonDecode(response.body) as Map<String, dynamic>;
-      return _parseMatchData(data);
+      return _parseMatchData(data, rvMatchId);
     } catch (_) {
       return null;
     }
   }
 
-  static Future<BowlerData?> fetchCurrentBowler(String playCricketUrl) async {
-    final externalId = extractMatchId(playCricketUrl);
-    if (externalId == null) return null;
-
-    final rvMatchId = await _getResultsVaultMatchId(externalId);
-    if (rvMatchId == null) return null;
-
-    final matchData = await fetchMatchData(playCricketUrl);
-    if (matchData == null || matchData.bowlingInningsNumber == 0 || matchData.bowlingResultId == null) return null;
+  static Future<BowlerData?> fetchCurrentBowlerFromMatchData(MatchData? matchData) async {
+    if (matchData == null || matchData.rvMatchId == 0 || matchData.bowlingInningsNumber == 0 || matchData.bowlingResultId == null) return null;
 
     final inningsNum = matchData.bowlingInningsNumber;
     final resultId = matchData.bowlingResultId!;
+    final rvMatchId = matchData.rvMatchId;
 
     final url = Uri.parse(
         '$_apiBase$_masterEntityId/matches/$rvMatchId/?apiid=$_apiId&action=getballs&sportid=1&resultid=$resultId&inningsnumber=$inningsNum');
@@ -182,10 +178,14 @@ class PlayCricketScraper {
     if (bowlerId == null) return null;
 
     String bowlerName = lastBall['bowler_name']?.toString() ?? lastBall['bowler']?.toString() ?? '';
+    int overs = 0, runs = 0, wickets = 0;
     if (bowlerName.isEmpty && bowlers.isNotEmpty) {
       final matchedBowler = bowlers.where((b) => b.bowlerId == bowlerId).firstOrNull;
       if (matchedBowler != null) {
         bowlerName = matchedBowler.name;
+        overs = matchedBowler.overs;
+        runs = matchedBowler.runs;
+        wickets = matchedBowler.wickets;
       }
     }
     if (bowlerName.isEmpty) {
@@ -195,19 +195,20 @@ class PlayCricketScraper {
     return BowlerData(
       bowlerId: bowlerId,
       name: bowlerName,
-      wickets: (lastBall['wicket'] ?? 0) as int,
-      runs: (lastBall['runs'] ?? 0) as int,
-      overs: ((lastBall['over'] ?? 0) as int),
+      wickets: wickets,
+      runs: runs,
+      overs: overs,
     );
   }
 
   static BowlerData? parseCurrentBowlerFromBallData(Map<String, dynamic> data, [List<BowlerData>? bowlers]) =>
       _parseCurrentBowler(data, bowlers ?? []);
 
-  static MatchData _parseMatchData(Map<String, dynamic> data) {
+  static MatchData _parseMatchData(Map<String, dynamic> data, int rvMatchId) {
     final teams = data['MatchTeams'] as List? ?? [];
     if (teams.isEmpty) {
       return MatchData(
+        rvMatchId: rvMatchId,
         homeTeam: (data['home_name'] ?? '') as String,
         awayTeam: (data['away_name'] ?? '') as String,
         result: (data['leader_text'] ?? '') as String,
@@ -278,6 +279,7 @@ class PlayCricketScraper {
     batsmen = _parseBatsmen((battingTeamData as Map<String, dynamic>)['Innings'] as List?);
 
     return MatchData(
+      rvMatchId: rvMatchId,
       homeTeam: (homeTeam['club_name'] ?? '') as String,
       homeScore: homeInnings['score']!,
       homeOvers: homeInnings['overs']!,
