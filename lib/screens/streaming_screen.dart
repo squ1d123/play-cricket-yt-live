@@ -223,7 +223,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
 
     try {
       await _updateStreamOverlay();
-      await _cameraController!.startVideoStreaming(url, bitrate: 4500 * 1024);
+      await _cameraController!.startVideoStreaming(url, bitrate: 8000 * 1024);
       setState(() => _isStreaming = true);
     } catch (e) {
       _showSnack('Stream error: $e');
