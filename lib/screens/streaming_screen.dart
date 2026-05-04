@@ -33,6 +33,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
   final GlobalKey _overlayKey = GlobalKey();
   final YouTubeLiveService _ytService = YouTubeLiveService();
   bool _useYouTubeApi = false;
+  bool _showOverlay = true;
   double _zoomLevel = 0;
   double _zoomMin = 0;
   double _zoomMax = 1;
@@ -443,31 +444,31 @@ class _StreamingScreenState extends State<StreamingScreen> {
           else
             const Center(child: CircularProgressIndicator()),
 
-          // Overlay preview - visible on screen AND captured for stream
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: RepaintBoundary(
-              key: _overlayKey,
-              child: CricketScoreOverlay(
-                teamName: _teamName,
-                score: _score,
-                overs: _overs,
-                batsman1Name: _batsman1Name,
-                batsman1Runs: _batsman1Runs,
-                batsman1Balls: _batsman1Balls,
-                batsman1OnStrike: _batsman1OnStrike,
-                batsman2Name: _batsman2Name,
-                batsman2Runs: _batsman2Runs,
-                batsman2Balls: _batsman2Balls,
-                bowlerName: _bowlerName,
-                bowlerWickets: _bowlerWickets,
-                bowlerRuns: _bowlerRuns,
-                bowlerOvers: _bowlerOvers,
+          if (_showOverlay)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: RepaintBoundary(
+                key: _overlayKey,
+                child: CricketScoreOverlay(
+                  teamName: _teamName,
+                  score: _score,
+                  overs: _overs,
+                  batsman1Name: _batsman1Name,
+                  batsman1Runs: _batsman1Runs,
+                  batsman1Balls: _batsman1Balls,
+                  batsman1OnStrike: _batsman1OnStrike,
+                  batsman2Name: _batsman2Name,
+                  batsman2Runs: _batsman2Runs,
+                  batsman2Balls: _batsman2Balls,
+                  bowlerName: _bowlerName,
+                  bowlerWickets: _bowlerWickets,
+                  bowlerRuns: _bowlerRuns,
+                  bowlerOvers: _bowlerOvers,
+                ),
               ),
             ),
-          ),
 
           // Top bar - status + controls
           Positioned(
@@ -515,6 +516,14 @@ class _StreamingScreenState extends State<StreamingScreen> {
                             onPressed: _signInYouTube,
                             tooltip: 'Sign in to YouTube',
                           ),
+                        IconButton(
+                          icon: Icon(
+                            _showOverlay ? Icons.layers : Icons.layers_outlined,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => setState(() => _showOverlay = !_showOverlay),
+                          tooltip: _showOverlay ? 'Hide overlay' : 'Show overlay',
+                        ),
                         IconButton(
                           icon: const Icon(Icons.cameraswitch, color: Colors.white),
                           onPressed: _cameras != null && _cameras!.length > 1 ? _showCameraPicker : null,
