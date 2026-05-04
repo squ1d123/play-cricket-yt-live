@@ -13,6 +13,11 @@ class MatchData {
   final List<BatsmanData> batsmen;
   final List<BowlerData> bowlers;
 
+  final String battingTeam;
+  final String battingScore;
+  final String battingOvers;
+  final String bowlingTeam;
+
   const MatchData({
     this.homeTeam = '',
     this.homeScore = '',
@@ -23,6 +28,10 @@ class MatchData {
     this.result = '',
     this.batsmen = const [],
     this.bowlers = const [],
+    this.battingTeam = '',
+    this.battingScore = '',
+    this.battingOvers = '',
+    this.bowlingTeam = '',
   });
 }
 
@@ -149,16 +158,46 @@ class PlayCricketScraper {
     final homeInnings = _parseInnings(homeTeam as Map<String, dynamic>);
     final awayInnings = _parseInnings(awayTeam as Map<String, dynamic>);
 
-    // Get batsmen from the team that batted second (currently batting in a live game)
-    final battingTeam =
-        (homeTeam['batted_first'] == false) ? homeTeam : awayTeam;
-    final bowlingTeam =
-        (homeTeam['batted_first'] == false) ? awayTeam : homeTeam;
+    final homeBattedFirst = homeTeam['batted_first'] == true;
+    final homeRuns = _getInningsRuns((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+    final awayRuns = _getInningsRuns((awayTeam as Map<String, dynamic>)['Innings'] as List?);
 
-    final batsmen =
-        _parseBatsmen((battingTeam as Map<String, dynamic>)['Innings'] as List?);
-    final bowlers =
-        _parseBowlers((bowlingTeam as Map<String, dynamic>)['Innings'] as List?);
+    String battingTeamName;
+    Map<String, String> battingInnings;
+    String bowlingTeamName;
+    List<BatsmanData> batsmen;
+    List<BowlerData> bowlers;
+
+    if (homeBattedFirst) {
+      if (awayRuns > 0) {
+        battingTeamName = (awayTeam['club_name'] ?? '') as String;
+        battingInnings = awayInnings;
+        bowlingTeamName = (homeTeam['club_name'] ?? '') as String;
+        bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+      } else {
+        battingTeamName = (homeTeam['club_name'] ?? '') as String;
+        battingInnings = homeInnings;
+        bowlingTeamName = (awayTeam['club_name'] ?? '') as String;
+        bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+      }
+    } else {
+      if (homeRuns > 0) {
+        battingTeamName = (homeTeam['club_name'] ?? '') as String;
+        battingInnings = homeInnings;
+        bowlingTeamName = (awayTeam['club_name'] ?? '') as String;
+        bowlers = _parseBowlers((awayTeam as Map<String, dynamic>)['Innings'] as List?);
+      } else {
+        battingTeamName = (awayTeam['club_name'] ?? '') as String;
+        battingInnings = awayInnings;
+        bowlingTeamName = (homeTeam['club_name'] ?? '') as String;
+        bowlers = _parseBowlers((homeTeam as Map<String, dynamic>)['Innings'] as List?);
+      }
+    }
+
+    final battingTeamData = homeBattedFirst
+        ? (awayRuns > 0 ? awayTeam : homeTeam)
+        : (homeRuns > 0 ? homeTeam : awayTeam);
+    batsmen = _parseBatsmen((battingTeamData as Map<String, dynamic>)['Innings'] as List?);
 
     return MatchData(
       homeTeam: (homeTeam['club_name'] ?? '') as String,
@@ -170,7 +209,17 @@ class PlayCricketScraper {
       result: (data['leader_text'] ?? '') as String,
       batsmen: batsmen,
       bowlers: bowlers,
+      battingTeam: battingTeamName,
+      battingScore: battingInnings['score']!,
+      battingOvers: battingInnings['overs']!,
+      bowlingTeam: bowlingTeamName,
     );
+  }
+
+  static int _getInningsRuns(List? innings) {
+    if (innings == null || innings.isEmpty) return 0;
+    final inn = innings.last as Map<String, dynamic>;
+    return (inn['runs'] ?? 0) as int;
   }
 
   static Map<String, String> _parseInnings(Map<String, dynamic> team) {

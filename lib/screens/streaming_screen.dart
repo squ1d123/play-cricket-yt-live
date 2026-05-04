@@ -124,9 +124,9 @@ class _StreamingScreenState extends State<StreamingScreen> {
     if (data == null) return;
 
     setState(() {
-      _teamName = data.homeTeam;
-      _score = data.homeScore;
-      _overs = data.homeOvers;
+      _teamName = data.battingTeam.isNotEmpty ? data.battingTeam : data.homeTeam;
+      _score = data.battingScore.isNotEmpty ? data.battingScore : data.homeScore;
+      _overs = data.battingOvers.isNotEmpty ? data.battingOvers : data.homeOvers;
 
       // Populate batsmen from API data
       if (data.batsmen.length >= 1) {
