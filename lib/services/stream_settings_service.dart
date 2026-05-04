@@ -11,7 +11,9 @@ class ResolutionPresetOption {
   final String name;
   final ResolutionPreset preset;
   final String youtubeResolution;
-  const ResolutionPresetOption(this.name, this.preset, this.youtubeResolution);
+  final int width;
+  final int height;
+  const ResolutionPresetOption(this.name, this.preset, this.youtubeResolution, this.width, this.height);
 }
 
 class StreamSettingsService {
@@ -30,10 +32,10 @@ class StreamSettingsService {
   ];
 
   static const List<ResolutionPresetOption> resolutionPresets = [
-    ResolutionPresetOption('720p (HD)', ResolutionPreset.high, '720p'),
-    ResolutionPresetOption('1080p (Full HD)', ResolutionPreset.veryHigh, '1080p'),
-    ResolutionPresetOption('1440p (2K)', ResolutionPreset.ultraHigh, '1440p'),
-    ResolutionPresetOption('4K', ResolutionPreset.max, '2160p'),
+    ResolutionPresetOption('720p (HD)', ResolutionPreset.high, '720p', 1280, 720),
+    ResolutionPresetOption('1080p (Full HD)', ResolutionPreset.veryHigh, '1080p', 1920, 1080),
+    ResolutionPresetOption('1440p (2K)', ResolutionPreset.ultraHigh, '1440p', 2560, 1440),
+    ResolutionPresetOption('4K', ResolutionPreset.max, '2160p', 3840, 2160),
   ];
 
   static int get defaultBitrate => bitratePresets[1].bitrate;
@@ -102,6 +104,14 @@ class StreamSettingsService {
       return resolutionPresets[index].youtubeResolution;
     }
     return '1080p';
+  }
+
+  static Future<(int, int)> getStreamDimensions() async {
+    final index = await getResolutionIndex();
+    if (index >= 0 && index < resolutionPresets.length) {
+      return (resolutionPresets[index].width, resolutionPresets[index].height);
+    }
+    return (1920, 1080);
   }
 
   static Future<int> getResolutionIndex() async {

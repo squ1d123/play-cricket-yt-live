@@ -39,6 +39,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
   double _zoomMax = 1;
   Timer? _scrapeTimer;
   String? _scorecardUrl;
+  int _streamWidth = 1920;
+  int _streamHeight = 1080;
 
   String _teamName = '';
   String _score = '';
@@ -342,7 +344,10 @@ class _StreamingScreenState extends State<StreamingScreen> {
     if (_cameraController == null || !_isInitialized) return;
 
     try {
-      // Wait for the overlay to be laid out
+      final dims = await StreamSettingsService.getStreamDimensions();
+      _streamWidth = dims.$1;
+      _streamHeight = dims.$2;
+
       await Future.delayed(const Duration(milliseconds: 100));
 
       final boundary = _overlayKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
@@ -353,9 +358,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
       final overlayWidth = overlayImage.width.toDouble();
       final overlayHeight = overlayImage.height.toDouble();
 
-      // Create a full 1920x1080 transparent canvas with overlay at the bottom
-      const streamWidth = 1920.0;
-      const streamHeight = 1080.0;
+      final streamWidth = _streamWidth.toDouble();
+      final streamHeight = _streamHeight.toDouble();
 
       final recorder = ui.PictureRecorder();
       final canvas = Canvas(recorder);
