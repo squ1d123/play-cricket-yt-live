@@ -175,8 +175,9 @@ class _StreamingScreenState extends State<StreamingScreen> {
     await Future.delayed(const Duration(milliseconds: 500));
 
     try {
+      final resolution = await StreamSettingsService.getResolution();
       _cameraController = CameraController(
-        ResolutionPreset.veryHigh,
+        resolution,
         enableAudio: true,
       );
       await _cameraController!.initialize(_cameras![cameraIndex]);

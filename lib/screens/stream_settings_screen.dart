@@ -16,6 +16,7 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   final _streamKeyController = TextEditingController();
   final _scorecardUrlController = TextEditingController();
   final _bitrateController = TextEditingController();
+  final _resolutionController = TextEditingController();
   bool _isLoading = true;
   bool _isTesting = false;
   String? _testResult;
@@ -31,13 +32,20 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     final streamKey = await StreamSettingsService.getStreamKey();
     final scorecardUrl = await StreamSettingsService.getScorecardUrl();
     final bitrate = await StreamSettingsService.getBitrate();
+    final resolutionIndex = await StreamSettingsService.getResolutionIndex();
 
     _rtmpUrlController.text = rtmpUrl ?? 'rtmps://a.rtmps.youtube.com/live2';
     _streamKeyController.text = streamKey ?? '';
     _scorecardUrlController.text = scorecardUrl ?? '';
 
-    final preset = StreamSettingsService.presets.where((p) => p.bitrate == bitrate).firstOrNull;
-    _bitrateController.text = preset?.name ?? 'High (8 Mbps)';
+    final bitratePreset = StreamSettingsService.bitratePresets.where((p) => p.bitrate == bitrate).firstOrNull;
+    _bitrateController.text = bitratePreset?.name ?? 'High (8 Mbps)';
+
+    if (resolutionIndex >= 0 && resolutionIndex < StreamSettingsService.resolutionPresets.length) {
+      _resolutionController.text = StreamSettingsService.resolutionPresets[resolutionIndex].name;
+    } else {
+      _resolutionController.text = '1080p (Full HD)';
+    }
 
     setState(() => _isLoading = false);
   }
@@ -45,10 +53,17 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   Future<void> _saveSettings() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final selectedPreset = StreamSettingsService.presets
+    final selectedBitrate = StreamSettingsService.bitratePresets
         .where((p) => p.name == _bitrateController.text)
         .firstOrNull;
-    final bitrate = selectedPreset?.bitrate ?? StreamSettingsService.defaultBitrate;
+    final bitrate = selectedBitrate?.bitrate ?? StreamSettingsService.defaultBitrate;
+
+    final selectedResolution = StreamSettingsService.resolutionPresets
+        .asMap()
+        .entries
+        .where((e) => e.value.name == _resolutionController.text)
+        .firstOrNull;
+    final resolutionIndex = selectedResolution?.key ?? 1;
 
     await StreamSettingsService.saveSettings(
       _rtmpUrlController.text.trim(),
@@ -58,6 +73,7 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
       _scorecardUrlController.text.trim(),
     );
     await StreamSettingsService.saveBitrate(bitrate);
+    await StreamSettingsService.saveResolution(resolutionIndex);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -205,10 +221,10 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                           ? 'High (8 Mbps)' 
                           : _bitrateController.text,
                       decoration: const InputDecoration(
-                        labelText: 'Stream Quality',
+                        labelText: 'Bitrate',
                         border: OutlineInputBorder(),
                       ),
-                      items: StreamSettingsService.presets.map((preset) {
+                      items: StreamSettingsService.bitratePresets.map((preset) {
                         return DropdownMenuItem(
                           value: preset.name,
                           child: Text(preset.name),
@@ -217,6 +233,27 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                       onChanged: (value) {
                         if (value != null) {
                           _bitrateController.text = value;
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _resolutionController.text.isEmpty 
+                          ? '1080p (Full HD)' 
+                          : _resolutionController.text,
+                      decoration: const InputDecoration(
+                        labelText: 'Resolution',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: StreamSettingsService.resolutionPresets.map((preset) {
+                        return DropdownMenuItem(
+                          value: preset.name,
+                          child: Text(preset.name),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          _resolutionController.text = value;
                         }
                       },
                     ),

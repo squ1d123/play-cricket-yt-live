@@ -2,6 +2,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/youtube/v3.dart' as yt;
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import '../services/stream_settings_service.dart';
 
 class AuthenticatedClient extends http.BaseClient {
   final Map<String, String> _headers;
@@ -84,13 +85,14 @@ class YouTubeLiveService {
       debugPrint('Created broadcast: $broadcastId');
 
       // 2. Create stream
+      final youtubeResolution = await StreamSettingsService.getYoutubeResolution();
       final stream = await _api!.liveStreams.insert(
         yt.LiveStream(
           snippet: yt.LiveStreamSnippet(title: '$title - Stream'),
           cdn: yt.CdnSettings(
             frameRate: '60fps',
             ingestionType: 'rtmp',
-            resolution: '1080p',
+            resolution: youtubeResolution,
           ),
         ),
         ['snippet', 'cdn'],

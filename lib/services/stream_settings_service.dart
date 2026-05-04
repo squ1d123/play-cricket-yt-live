@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rtmp_streaming/camera.dart';
 
 class BitratePreset {
   final String name;
@@ -6,13 +7,21 @@ class BitratePreset {
   const BitratePreset(this.name, this.bitrate);
 }
 
+class ResolutionPresetOption {
+  final String name;
+  final ResolutionPreset preset;
+  final String youtubeResolution;
+  const ResolutionPresetOption(this.name, this.preset, this.youtubeResolution);
+}
+
 class StreamSettingsService {
   static const String _rtmpUrlKey = 'rtmp_url';
   static const String _streamKeyKey = 'stream_key';
   static const String _scorecardUrlKey = 'scorecard_url';
   static const String _bitrateKey = 'bitrate';
+  static const String _resolutionKey = 'resolution';
 
-  static const List<BitratePreset> presets = [
+  static const List<BitratePreset> bitratePresets = [
     BitratePreset('Good (6 Mbps)', 6 * 1024 * 1024),
     BitratePreset('High (8 Mbps)', 8 * 1024 * 1024),
     BitratePreset('Very High (12 Mbps)', 12 * 1024 * 1024),
@@ -20,7 +29,15 @@ class StreamSettingsService {
     BitratePreset('Ultra (20 Mbps)', 20 * 1024 * 1024),
   ];
 
-  static int get defaultBitrate => presets[2].bitrate;
+  static const List<ResolutionPresetOption> resolutionPresets = [
+    ResolutionPresetOption('720p (HD)', ResolutionPreset.high, '720p'),
+    ResolutionPresetOption('1080p (Full HD)', ResolutionPreset.veryHigh, '1080p'),
+    ResolutionPresetOption('1440p (2K)', ResolutionPreset.ultraHigh, '1440p'),
+    ResolutionPresetOption('4K', ResolutionPreset.max, '2160p'),
+  ];
+
+  static int get defaultBitrate => bitratePresets[1].bitrate;
+  static ResolutionPreset get defaultResolution => resolutionPresets[1].preset;
 
   static Future<String?> getRtmpUrl() async {
     final prefs = await SharedPreferences.getInstance();
@@ -68,5 +85,32 @@ class StreamSettingsService {
   static Future<void> saveBitrate(int bitrate) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_bitrateKey, bitrate);
+  }
+
+  static Future<ResolutionPreset> getResolution() async {
+    final prefs = await SharedPreferences.getInstance();
+    final index = prefs.getInt(_resolutionKey) ?? 1;
+    if (index >= 0 && index < resolutionPresets.length) {
+      return resolutionPresets[index].preset;
+    }
+    return defaultResolution;
+  }
+
+  static Future<String> getYoutubeResolution() async {
+    final index = await getResolutionIndex();
+    if (index >= 0 && index < resolutionPresets.length) {
+      return resolutionPresets[index].youtubeResolution;
+    }
+    return '1080p';
+  }
+
+  static Future<int> getResolutionIndex() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_resolutionKey) ?? 1;
+  }
+
+  static Future<void> saveResolution(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_resolutionKey, index);
   }
 }
