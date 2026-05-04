@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:play_cricket_yt_live/services/play_cricket_scraper.dart';
 
@@ -40,7 +41,7 @@ void main() {
           const BatsmanData(name: 'Player 2', runs: 25, balls: 20),
         ],
         bowlers: [
-          const BowlerData(name: 'Bowler 1', wickets: 1, runs: 30, overs: 4),
+          const BowlerData(bowlerId: 11959191, name: 'Bowler 1', wickets: 1, runs: 30, overs: 4),
         ],
       );
 
@@ -69,12 +70,14 @@ void main() {
 
     test('BowlerData has correct fields', () {
       const bowler = BowlerData(
+        bowlerId: 11959191,
         name: 'Jane Smith',
         wickets: 3,
         runs: 25,
         overs: 4,
       );
 
+      expect(bowler.bowlerId, 11959191);
       expect(bowler.name, 'Jane Smith');
       expect(bowler.wickets, 3);
       expect(bowler.runs, 25);
@@ -109,5 +112,35 @@ void main() {
       final result = await PlayCricketScraper.fetchMatchData('https://play-cricket.com/');
       expect(result, null);
     });
+
+    test('parseCurrentBowlerFromBallData returns bowler with correct ID', () {
+      final ballData = {
+        'BallbyBall': [
+          {'over': 1, 'ball': 1, 'bowler': 'John Doe', 'bowler_id': 11959191, 'runs': 0, 'wicket': 0},
+        ]
+      };
+
+      final bowler = PlayCricketScraper.parseCurrentBowlerFromBallData(ballData);
+
+      expect(bowler, isNotNull);
+      expect(bowler!.bowlerId, 11959191);
+      expect(bowler.name, 'John Doe');
+    });
+
+    test('parseCurrentBowlerFromBallData returns null for empty balls', () {
+      final ballData = {'BallbyBall': <Map<String, dynamic>>[]};
+
+      final bowler = PlayCricketScraper.parseCurrentBowlerFromBallData(ballData);
+
+      expect(bowler, isNull);
+    });
+
+    test('fetchCurrentBowler returns bowler with expected ID from real API', () async {
+      const url = 'https://debeauvoirdugongs.play-cricket.com/website/results/7080352';
+      final bowler = await PlayCricketScraper.fetchCurrentBowler(url);
+
+      expect(bowler, isNotNull);
+      expect(bowler!.bowlerId, 11959191);
+    }, timeout: const Timeout(Duration(minutes: 1)));
   });
 }

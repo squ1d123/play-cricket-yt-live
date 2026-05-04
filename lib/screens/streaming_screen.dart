@@ -148,20 +148,13 @@ class _StreamingScreenState extends State<StreamingScreen> {
         _batsman2Balls = b2.balls;
       }
 
-      // Populate bowler from ball-by-ball API (current bowler), fallback to best figures
+      // Populate bowler from ball-by-ball API (current bowler)
       if (currentBowler != null) {
         _bowlerName = currentBowler.name;
         _bowlerWickets = currentBowler.wickets;
         _bowlerRuns = currentBowler.runs;
         _bowlerOvers = currentBowler.overs;
-      } else if (data.bowlers.isNotEmpty) {
-        final topBowler = data.bowlers.reduce((a, b) =>
-            a.wickets > b.wickets ? a : b);
-        _bowlerName = topBowler.name;
-        _bowlerWickets = topBowler.wickets;
-        _bowlerRuns = topBowler.runs;
-        _bowlerOvers = topBowler.overs;
-      }
+      } 
     });
 
     if (_isStreaming) {
