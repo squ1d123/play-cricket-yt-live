@@ -69,6 +69,8 @@ class YouTubeLiveService {
           contentDetails: yt.LiveBroadcastContentDetails(
             enableAutoStart: true,
             enableAutoStop: true,
+            latencyPreference: "normal",
+            enableLowLatency: false,
           ),
           status: yt.LiveBroadcastStatus(
             privacyStatus: privacy,
