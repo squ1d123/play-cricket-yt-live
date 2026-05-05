@@ -29,10 +29,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
   bool _isSwitchingCamera = false;
   int _currentCameraIndex = 0;
   String? _error;
-  String? _rtmpUrl;
   final GlobalKey _overlayKey = GlobalKey();
   final YouTubeLiveService _ytService = YouTubeLiveService();
-  bool _useYouTubeApi = false;
   bool _showOverlay = true;
   double _zoomLevel = 0;
   double _zoomMin = 0;
@@ -90,7 +88,6 @@ class _StreamingScreenState extends State<StreamingScreen> {
     try {
       _cameras = await availableCameras();
       final hasSettings = await StreamSettingsService.hasSettings();
-      _rtmpUrl = await StreamSettingsService.getFullRtmpUrl();
       _scorecardUrl = await StreamSettingsService.getScorecardUrl();
 
       setState(() {
@@ -210,21 +207,17 @@ class _StreamingScreenState extends State<StreamingScreen> {
       return;
     }
 
-    // Determine RTMP URL
-    String? url = _rtmpUrl;
-    if (_useYouTubeApi) {
-      _showSnack('Creating YouTube broadcast...');
-      url = await _ytService.createAndBindStream(
-        title: 'De Beauvoir Dugongs Live - ${DateTime.now().toIso8601String().substring(0, 10)}',
-      );
-      if (url == null) {
-        _showSnack('Failed to create YouTube broadcast');
-        return;
-      }
+    if (!_ytService.isSignedIn) {
+      _showSnack('Please sign in to YouTube first');
+      return;
     }
 
-    if (url == null || url.isEmpty) {
-      _showSnack('Please configure stream settings first');
+    _showSnack('Creating YouTube broadcast...');
+    final url = await _ytService.createAndBindStream(
+      title: 'De Beauvoir Dugongs Live - ${DateTime.now().toIso8601String().substring(0, 10)}',
+    );
+    if (url == null) {
+      _showSnack('Failed to create YouTube broadcast');
       return;
     }
 
@@ -241,7 +234,6 @@ class _StreamingScreenState extends State<StreamingScreen> {
 
   Future<void> _signInYouTube() async {
     final success = await _ytService.signIn();
-    setState(() => _useYouTubeApi = success);
     _showSnack(success ? 'YouTube connected' : 'YouTube sign-in failed');
     // Re-initialize camera after sign-in activity returns
     if (success && _cameras != null && _cameras!.isNotEmpty) {
@@ -379,7 +371,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
       canvas.restore();
 
       final picture = recorder.endRecording();
-      final fullImage = await picture.toImage(1920, 1080);
+      final fullImage = await picture.toImage(_streamWidth, _streamHeight);
       final byteData = await fullImage.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return;
 
@@ -412,7 +404,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
       );
     }
 
-    if (!_hasSettings && !_useYouTubeApi) {
+    if (!_hasSettings) {
       return Scaffold(
         body: Center(
           child: SingleChildScrollView(
@@ -422,18 +414,8 @@ class _StreamingScreenState extends State<StreamingScreen> {
               children: [
                 const Icon(Icons.settings, size: 64, color: Colors.grey),
                 const SizedBox(height: 16),
-                const Text('No stream settings configured', style: TextStyle(fontSize: 18)),
+                const Text('No scorecard URL configured', style: TextStyle(fontSize: 18)),
                 const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: _signInYouTube,
-                  icon: const Icon(Icons.login),
-                  label: const Text('SIGN IN WITH YOUTUBE'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Go Back'),

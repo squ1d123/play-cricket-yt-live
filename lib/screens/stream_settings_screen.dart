@@ -13,7 +13,6 @@ class StreamSettingsScreen extends StatefulWidget {
 
 class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _rtmpUrlController = TextEditingController();
   final _scorecardUrlController = TextEditingController();
   final _bitrateController = TextEditingController();
   final _resolutionController = TextEditingController();
@@ -30,12 +29,10 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   }
 
   Future<void> _loadSettings() async {
-    final rtmpUrl = await StreamSettingsService.getRtmpUrl();
     final scorecardUrl = await StreamSettingsService.getScorecardUrl();
     final bitrate = await StreamSettingsService.getBitrate();
     final resolutionIndex = await StreamSettingsService.getResolutionIndex();
 
-    _rtmpUrlController.text = rtmpUrl ?? 'rtmps://a.rtmps.youtube.com/live2';
     _scorecardUrlController.text = scorecardUrl ?? '';
 
     final bitratePreset = StreamSettingsService.bitratePresets.where((p) => p.bitrate == bitrate).firstOrNull;
@@ -68,9 +65,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
         .firstOrNull;
     final resolutionIndex = selectedResolution?.key ?? 1;
 
-    await StreamSettingsService.saveSettings(
-      _rtmpUrlController.text.trim(),
-    );
     await StreamSettingsService.saveScorecardUrl(
       _scorecardUrlController.text.trim(),
     );
@@ -139,7 +133,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
 
   @override
   void dispose() {
-    _rtmpUrlController.dispose();
     _scorecardUrlController.dispose();
     super.dispose();
   }
@@ -247,29 +240,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                         ),
                       ),
                     const SizedBox(height: 24),
-                    const Text(
-                      'RTMP Settings',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _rtmpUrlController,
-                      decoration: const InputDecoration(
-                        labelText: 'RTMP Server URL',
-                        hintText: 'rtmps://a.rtmps.youtube.com/live2',
-                        border: OutlineInputBorder(),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter RTMP URL';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
                       value: _bitrateController.text.isEmpty 
                           ? 'High (8 Mbps)' 

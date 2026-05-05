@@ -17,7 +17,6 @@ class ResolutionPresetOption {
 }
 
 class StreamSettingsService {
-  static const String _rtmpUrlKey = 'rtmp_url';
   static const String _scorecardUrlKey = 'scorecard_url';
   static const String _bitrateKey = 'bitrate';
   static const String _resolutionKey = 'resolution';
@@ -40,11 +39,6 @@ class StreamSettingsService {
   static int get defaultBitrate => bitratePresets[1].bitrate;
   static ResolutionPreset get defaultResolution => resolutionPresets[1].preset;
 
-  static Future<String?> getRtmpUrl() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_rtmpUrlKey);
-  }
-
   static Future<String?> getScorecardUrl() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_scorecardUrlKey);
@@ -55,18 +49,10 @@ class StreamSettingsService {
     await prefs.setString(_scorecardUrlKey, url);
   }
 
-  static Future<void> saveSettings(String rtmpUrl) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_rtmpUrlKey, rtmpUrl);
-  }
-
-  static Future<String> getFullRtmpUrl() async {
-    return await getRtmpUrl() ?? 'rtmps://a.rtmps.youtube.com/live2';
-  }
-
   static Future<bool> hasSettings() async {
-    final rtmpUrl = await getRtmpUrl();
-    return rtmpUrl != null && rtmpUrl.isNotEmpty;
+    // Settings are considered configured if there's a scorecard URL
+    final url = await getScorecardUrl();
+    return url != null && url.isNotEmpty;
   }
 
   static Future<int> getBitrate() async {
