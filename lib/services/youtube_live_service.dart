@@ -2,6 +2,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/youtube/v3.dart' as yt;
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../services/stream_settings_service.dart';
 
 class AuthenticatedClient extends http.BaseClient {
@@ -28,11 +29,13 @@ class YouTubeLiveService {
   yt.YouTubeApi? _api;
 
   bool get isSignedIn => _account != null;
+  String? get currentAccountEmail => _account?.email;
 
   Future<bool> signIn() async {
     try {
       _account = await _googleSignIn.signIn();
       if (_account == null) return false;
+      await _persistAccountEmail();
       final auth = await _account!.authentication;
       final client = AuthenticatedClient({
         'Authorization': 'Bearer ${auth.accessToken}',
@@ -49,6 +52,47 @@ class YouTubeLiveService {
     await _googleSignIn.signOut();
     _account = null;
     _api = null;
+    await _clearAccountEmail();
+  }
+
+  /// Switches to a different Google account by forcing the account picker.
+  Future<bool> switchAccount() async {
+    try {
+      await _googleSignIn.signOut();
+      _account = await _googleSignIn.signIn();
+      if (_account == null) return false;
+      await _persistAccountEmail();
+      final auth = await _account!.authentication;
+      final client = AuthenticatedClient({
+        'Authorization': 'Bearer ${auth.accessToken}',
+      });
+      _api = yt.YouTubeApi(client);
+      return true;
+    } catch (e) {
+      debugPrint('YouTube account switch failed: $e');
+      return false;
+    }
+  }
+
+  Future<void> _persistAccountEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('yt_account_email', _account?.email ?? '');
+  }
+
+  Future<void> _clearAccountEmail() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('yt_account_email');
+  }
+
+  Future<void> restoreAccount() async {
+    if (_googleSignIn.currentUser != null) {
+      _account = _googleSignIn.currentUser;
+      final auth = await _account!.authentication;
+      final client = AuthenticatedClient({
+        'Authorization': 'Bearer ${auth.accessToken}',
+      });
+      _api = yt.YouTubeApi(client);
+    }
   }
 
   /// Creates a broadcast, creates a stream, binds them, and returns the RTMP ingestion URL.

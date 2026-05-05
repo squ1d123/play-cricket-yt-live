@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/stream_settings_service.dart';
 import '../services/play_cricket_scraper.dart';
 import '../services/stream_settings_service.dart' show BitratePreset;
+import '../services/youtube_live_service.dart';
 
 class StreamSettingsScreen extends StatefulWidget {
   const StreamSettingsScreen({super.key});
@@ -17,9 +18,11 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   final _scorecardUrlController = TextEditingController();
   final _bitrateController = TextEditingController();
   final _resolutionController = TextEditingController();
+  final _ytService = YouTubeLiveService();
   bool _isLoading = true;
   bool _isTesting = false;
   String? _testResult;
+  String? _ytAccountEmail;
 
   @override
   void initState() {
@@ -46,6 +49,9 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     } else {
       _resolutionController.text = '1080p (Full HD)';
     }
+
+    await _ytService.restoreAccount();
+    _ytAccountEmail = _ytService.currentAccountEmail;
 
     setState(() => _isLoading = false);
   }
@@ -105,6 +111,36 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     });
   }
 
+  Future<void> _switchYtAccount() async {
+    setState(() => _isLoading = true);
+    final success = await _ytService.switchAccount();
+    if (success) {
+      _ytAccountEmail = _ytService.currentAccountEmail;
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Switched to: $_ytAccountEmail')),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Account switch cancelled or failed')),
+        );
+      }
+    }
+    setState(() => _isLoading = false);
+  }
+
+  Future<void> _signOutYt() async {
+    await _ytService.signOut();
+    setState(() => _ytAccountEmail = null);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Signed out of YouTube')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _rtmpUrlController.dispose();
@@ -129,6 +165,45 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                 key: _formKey,
                 child: ListView(
                   children: [
+                    const Text(
+                      'YouTube Account',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    if (_ytAccountEmail != null)
+                      Text(
+                        'Signed in as: $_ytAccountEmail',
+                        style: const TextStyle(fontSize: 14, color: Colors.green),
+                      )
+                    else
+                      const Text(
+                        'Not signed in',
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: _switchYtAccount,
+                          child: Text(_ytAccountEmail != null ? 'Switch Account' : 'Sign In'),
+                        ),
+                        if (_ytAccountEmail != null) ...[
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: _signOutYt,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Sign Out'),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 24),
                     const Text(
                       'Scorecard URL',
                       style: TextStyle(
