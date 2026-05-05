@@ -14,7 +14,6 @@ class StreamSettingsScreen extends StatefulWidget {
 class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   final _formKey = GlobalKey<FormState>();
   final _rtmpUrlController = TextEditingController();
-  final _streamKeyController = TextEditingController();
   final _scorecardUrlController = TextEditingController();
   final _bitrateController = TextEditingController();
   final _resolutionController = TextEditingController();
@@ -32,13 +31,11 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
 
   Future<void> _loadSettings() async {
     final rtmpUrl = await StreamSettingsService.getRtmpUrl();
-    final streamKey = await StreamSettingsService.getStreamKey();
     final scorecardUrl = await StreamSettingsService.getScorecardUrl();
     final bitrate = await StreamSettingsService.getBitrate();
     final resolutionIndex = await StreamSettingsService.getResolutionIndex();
 
     _rtmpUrlController.text = rtmpUrl ?? 'rtmps://a.rtmps.youtube.com/live2';
-    _streamKeyController.text = streamKey ?? '';
     _scorecardUrlController.text = scorecardUrl ?? '';
 
     final bitratePreset = StreamSettingsService.bitratePresets.where((p) => p.bitrate == bitrate).firstOrNull;
@@ -73,7 +70,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
 
     await StreamSettingsService.saveSettings(
       _rtmpUrlController.text.trim(),
-      _streamKeyController.text.trim(),
     );
     await StreamSettingsService.saveScorecardUrl(
       _scorecardUrlController.text.trim(),
@@ -144,7 +140,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   @override
   void dispose() {
     _rtmpUrlController.dispose();
-    _streamKeyController.dispose();
     _scorecardUrlController.dispose();
     super.dispose();
   }
@@ -270,22 +265,6 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter RTMP URL';
-                        }
-                        return null;
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _streamKeyController,
-                      decoration: const InputDecoration(
-                        labelText: 'Stream Key',
-                        hintText: 'Your YouTube stream key',
-                        border: OutlineInputBorder(),
-                      ),
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter stream key';
                         }
                         return null;
                       },

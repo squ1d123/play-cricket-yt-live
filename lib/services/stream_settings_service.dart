@@ -18,7 +18,6 @@ class ResolutionPresetOption {
 
 class StreamSettingsService {
   static const String _rtmpUrlKey = 'rtmp_url';
-  static const String _streamKeyKey = 'stream_key';
   static const String _scorecardUrlKey = 'scorecard_url';
   static const String _bitrateKey = 'bitrate';
   static const String _resolutionKey = 'resolution';
@@ -46,11 +45,6 @@ class StreamSettingsService {
     return prefs.getString(_rtmpUrlKey);
   }
 
-  static Future<String?> getStreamKey() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_streamKeyKey);
-  }
-
   static Future<String?> getScorecardUrl() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_scorecardUrlKey);
@@ -61,22 +55,18 @@ class StreamSettingsService {
     await prefs.setString(_scorecardUrlKey, url);
   }
 
-  static Future<void> saveSettings(String rtmpUrl, String streamKey) async {
+  static Future<void> saveSettings(String rtmpUrl) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_rtmpUrlKey, rtmpUrl);
-    await prefs.setString(_streamKeyKey, streamKey);
   }
 
   static Future<String> getFullRtmpUrl() async {
-    final rtmpUrl = await getRtmpUrl() ?? 'rtmps://a.rtmps.youtube.com/live2';
-    final streamKey = await getStreamKey() ?? '';
-    if (streamKey.isEmpty) return rtmpUrl;
-    return '$rtmpUrl/$streamKey';
+    return await getRtmpUrl() ?? 'rtmps://a.rtmps.youtube.com/live2';
   }
 
   static Future<bool> hasSettings() async {
-    final streamKey = await getStreamKey();
-    return streamKey != null && streamKey.isNotEmpty;
+    final rtmpUrl = await getRtmpUrl();
+    return rtmpUrl != null && rtmpUrl.isNotEmpty;
   }
 
   static Future<int> getBitrate() async {
