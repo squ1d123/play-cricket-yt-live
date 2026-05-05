@@ -415,7 +415,7 @@ class _StreamingScreenState extends State<StreamingScreen> {
     if (!_hasSettings && !_useYouTubeApi) {
       return Scaffold(
         body: Center(
-          child: Padding(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(32),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
