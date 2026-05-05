@@ -36,6 +36,17 @@ enum ResolutionPreset {
   max,
 }
 
+/// Video encoder type for streaming.
+///
+/// H264: Default, widely compatible.
+/// H265 (HEVC): Better compression (~50% at same quality), requires device support.
+/// AV1: Best compression, requires newer device (Android 14+/Snapdragon 8 Gen 2+).
+enum VideoEncoder {
+  h264,
+  h265,
+  av1,
+}
+
 /// Returns the resolution preset as a String.
 String serializeResolutionPreset(ResolutionPreset resolutionPreset) {
   switch (resolutionPreset) {
@@ -1324,6 +1335,38 @@ class CameraController extends ValueNotifier<CameraValue> {
       await _channel.invokeMethod<void>(
         'setSessionPreset',
         <String, dynamic>{"sessionPreset": sessionPreset},
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Set video encoder for streaming (only Android, RootEncoder 2.7.0+).
+  ///
+  /// Must be called before [startVideoStreaming] or [startVideoRecording].
+  /// H265/AV1 may not be supported on all devices.
+  Future<void> setVideoEncoder(VideoEncoder encoder) async {
+    if (!value.isInitialized! || _isDisposed) {
+      throw CameraException(
+        'Uninitialized CameraController',
+        'setVideoEncoder was called on uninitialized CameraController',
+      );
+    }
+    if (!Platform.isAndroid) {
+      throw CameraException(
+        'Unsupported platforms.',
+        'setVideoEncoder is only supported on Android.',
+      );
+    }
+    try {
+      final encoderStr = encoder == VideoEncoder.h265
+          ? 'h265'
+          : encoder == VideoEncoder.av1
+              ? 'av1'
+              : 'h264';
+      await _channel.invokeMethod<void>(
+        'setVideoEncoder',
+        <String, dynamic>{'encoder': encoderStr},
       );
     } on PlatformException catch (e) {
       throw CameraException(e.code, e.message);

@@ -224,6 +224,14 @@ class _StreamingScreenState extends State<StreamingScreen> {
     try {
       await _updateStreamOverlay();
       final bitrate = await StreamSettingsService.getBitrate();
+      final encoderStr = await StreamSettingsService.getVideoEncoder();
+      final encoder = encoderStr == 'h265'
+          ? VideoEncoder.h265
+          : encoderStr == 'av1'
+              ? VideoEncoder.av1
+              : VideoEncoder.h264;
+      debugPrint('Setting video encoder: $encoderStr');
+      await _cameraController!.setVideoEncoder(encoder);
       debugPrint('Starting stream with bitrate: $bitrate');
       await _cameraController!.startVideoStreaming(url, bitrate: bitrate);
       setState(() => _isStreaming = true);

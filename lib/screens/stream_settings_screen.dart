@@ -21,6 +21,7 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
   bool _isTesting = false;
   String? _testResult;
   String? _ytAccountEmail;
+  String _selectedEncoder = 'h264';
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
     final scorecardUrl = await StreamSettingsService.getScorecardUrl();
     final bitrate = await StreamSettingsService.getBitrate();
     final resolutionIndex = await StreamSettingsService.getResolutionIndex();
+    _selectedEncoder = await StreamSettingsService.getVideoEncoder();
 
     _scorecardUrlController.text = scorecardUrl ?? '';
 
@@ -65,11 +67,14 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
         .firstOrNull;
     final resolutionIndex = selectedResolution?.key ?? 1;
 
+    final encoder = _selectedEncoder;
+
     await StreamSettingsService.saveScorecardUrl(
       _scorecardUrlController.text.trim(),
     );
     await StreamSettingsService.saveBitrate(bitrate);
     await StreamSettingsService.saveResolution(resolutionIndex);
+    await StreamSettingsService.saveVideoEncoder(encoder);
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -278,6 +283,34 @@ class _StreamSettingsScreenState extends State<StreamSettingsScreen> {
                       onChanged: (value) {
                         if (value != null) {
                           _resolutionController.text = value;
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedEncoder,
+                      decoration: const InputDecoration(
+                        labelText: 'Video Encoder (requires restart)',
+                        border: OutlineInputBorder(),
+                        helperText: 'H265/AV1 need device support. H264 is most compatible.',
+                      ),
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'h264',
+                          child: Text('H264 (compatible)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'h265',
+                          child: Text('H265 / HEVC (better quality)'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'av1',
+                          child: Text('AV1 (best compression)'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedEncoder = value);
                         }
                       },
                     ),

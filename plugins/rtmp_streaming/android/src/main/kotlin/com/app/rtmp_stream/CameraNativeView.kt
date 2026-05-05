@@ -74,6 +74,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 import com.pedro.library.view.OpenGlView
 import com.pedro.library.util.BitrateAdapter
+import com.pedro.common.VideoCodec
 import java.io.*
 
 
@@ -102,6 +103,8 @@ class CameraNativeView(
     private var forceBt709Color: Boolean = false
     /** RootEncoder 2.7.0+：RTMP 周期 ping，用于 RTT（须在与 startStream 前对 RtmpStreamClient 设置） */
     private var rtmpShouldSendPings: Boolean = false
+    /** 视频编码格式：H264（默认）、H265/HEVC、AV1 */
+    private var videoCodec: VideoCodec = VideoCodec.H264
     init {
 //        glView.isKeepAspectRatio = true
         glView.setAspectRatioMode(AspectRatioMode.Adjust)
@@ -237,6 +240,7 @@ class CameraNativeView(
                 val size = streamingSize["size"] as Size
                 val bitrateRes = streamingSize["bitrate"] as Int
                 rtmpCamera.forceBt709Color(forceBt709Color)
+                rtmpCamera.setVideoCodec(videoCodec)
                 if ((enableAudio && rtmpCamera.prepareAudio()) && rtmpCamera.prepareVideo(
                         size.width,
                         size.height,
@@ -272,6 +276,7 @@ class CameraNativeView(
                 val size = streamingSize["size"] as Size
                 val bitrateRes = streamingSize["bitrate"] as Int
                 rtmpCamera.forceBt709Color(forceBt709Color)
+                rtmpCamera.setVideoCodec(videoCodec)
                 (rtmpCamera.streamClient as? RtmpStreamClient)?.shouldSendPings(rtmpShouldSendPings)
                 if (rtmpCamera.isRecording || rtmpCamera.prepareAudio() && rtmpCamera.prepareVideo(
                         size.width,
@@ -948,6 +953,23 @@ class CameraNativeView(
         }
         rtmpShouldSendPings = enabled
         result.success(null)
+    }
+
+    fun setVideoEncoder(encoder: String?, result: MethodChannel.Result) {
+        if (encoder == null) {
+            result.error("setVideoEncoder", "encoder is required", null)
+            return
+        }
+        try {
+            videoCodec = when (encoder) {
+                "h265" -> VideoCodec.H265
+                "av1" -> VideoCodec.AV1
+                else -> VideoCodec.H264
+            }
+            result.success(null)
+        } catch (e: Exception) {
+            result.error("setVideoEncoder", e.message, null)
+        }
     }
 
     fun setZoom(level: Float?, result: MethodChannel.Result) {

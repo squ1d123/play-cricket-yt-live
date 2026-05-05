@@ -14,6 +14,7 @@ import android.util.Size
 import android.view.OrientationEventListener
 import androidx.annotation.RequiresApi
 import com.app.rtmp_stream.CameraPermissions.ResolutionPreset
+import com.pedro.encoder.video.VideoEncoder
 import io.flutter.plugin.common.*
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.platform.PlatformViewRegistry
@@ -155,6 +156,11 @@ class MethodCallHandlerImplNew(
             "setRtmpShouldSendPings" -> {
                 Log.i("Stuff", "setRtmpShouldSendPings")
                 getCameraView()?.setRtmpShouldSendPings(call.argument("enabled"), result)
+                    ?: result.error("no_camera", "Camera not initialized", null)
+            }
+            "setVideoEncoder" -> {
+                Log.i("Stuff", "setVideoEncoder")
+                getCameraView()?.setVideoEncoder(call.argument("encoder"), result)
                     ?: result.error("no_camera", "Camera not initialized", null)
             }
             "setZoom" -> {

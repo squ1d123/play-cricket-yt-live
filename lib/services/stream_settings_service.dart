@@ -20,6 +20,7 @@ class StreamSettingsService {
   static const String _scorecardUrlKey = 'scorecard_url';
   static const String _bitrateKey = 'bitrate';
   static const String _resolutionKey = 'resolution';
+  static const String _videoEncoderKey = 'video_encoder';
 
   static const List<BitratePreset> bitratePresets = [
     BitratePreset('Good (6 Mbps)', 6 * 1024 * 1024),
@@ -98,5 +99,17 @@ class StreamSettingsService {
   static Future<void> saveResolution(int index) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_resolutionKey, index);
+  }
+
+  static const String defaultVideoEncoder = 'h264';
+
+  static Future<String> getVideoEncoder() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_videoEncoderKey) ?? defaultVideoEncoder;
+  }
+
+  static Future<void> saveVideoEncoder(String encoder) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_videoEncoderKey, encoder);
   }
 }
