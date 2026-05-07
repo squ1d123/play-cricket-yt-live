@@ -241,8 +241,28 @@ fun StreamingScreen(
                             val camera = getRtmpCamera()
                             val cameras = camera?.camerasAvailable ?: emptyArray()
                             val currentId = camera?.currentCameraId ?: ""
-                            cameras.forEachIndexed { index, id ->
-                                val label = "Camera $index (${id})"
+                            val cameraManager = remember {
+                                context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                            }
+                            cameras.forEach { id ->
+                                val label = remember(id) {
+                                    try {
+                                        val chars = cameraManager.getCameraCharacteristics(id)
+                                        val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                        val focalLengths = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                                        val fl = focalLengths?.firstOrNull() ?: 0f
+                                        val facingStr = when (facing) {
+                                            android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT -> "Front"
+                                            android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK -> when {
+                                                fl > 5f -> "Tele ${(fl * 6.25f).toInt()}mm"
+                                                fl < 3f -> "Ultra-wide ${(fl * 6.25f).toInt()}mm"
+                                                else -> "Wide ${(fl * 6.25f).toInt()}mm"
+                                            }
+                                            else -> "External"
+                                        }
+                                        facingStr
+                                    } catch (_: Exception) { "Camera $id" }
+                                }
                                 DropdownMenuItem(
                                     text = { Text(if (id == currentId) "✓ $label" else label) },
                                     onClick = {
