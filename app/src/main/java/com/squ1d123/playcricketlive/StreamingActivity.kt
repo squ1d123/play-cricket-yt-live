@@ -239,11 +239,11 @@ fun StreamingScreen(
 
             // Stream button
             Box(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 80.dp)
+                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
             ) {
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(48.dp)
                         .clip(CircleShape)
                         .background(if (isStreaming) Color.Red else Color.White)
                         .clickable {
@@ -276,7 +276,7 @@ fun StreamingScreen(
                         if (isStreaming) Icons.Default.Close else Icons.Default.PlayArrow,
                         contentDescription = null,
                         tint = if (isStreaming) Color.White else Color.Red,
-                        modifier = Modifier.size(36.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
@@ -289,16 +289,22 @@ fun StreamingScreen(
                 val maxZoom = zoomRange?.upper ?: 1f
 
                 if (maxZoom > minZoom) {
-                    Slider(
-                        value = zoomLevel,
-                        onValueChange = { zoomLevel = it; getRtmpCamera()?.setZoom(it) },
-                        valueRange = minZoom..maxZoom,
+                    Column(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
-                            .padding(end = 16.dp)
-                            .height(200.dp),
-                        colors = SliderDefaults.colors(thumbColor = Color.Red, activeTrackColor = Color.Red)
-                    )
+                            .padding(end = 8.dp)
+                            .width(32.dp)
+                            .fillMaxHeight(0.5f),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Slider(
+                            value = zoomLevel,
+                            onValueChange = { zoomLevel = it; getRtmpCamera()?.setZoom(it) },
+                            valueRange = minZoom..maxZoom,
+                            modifier = Modifier.fillMaxHeight(),
+                            colors = SliderDefaults.colors(thumbColor = Color.Red, activeTrackColor = Color.Red)
+                        )
+                    }
                 }
             }
         } else {
