@@ -1,16 +1,68 @@
-# play_cricket_yt_live
+# Play Cricket Live
 
-A new Flutter project.
+Native Android app for live streaming cricket matches to YouTube with real-time score overlays from Play-Cricket.
 
-## Getting Started
+## Prerequisites
 
-This project is a starting point for a Flutter application.
+- Android SDK (command-line tools)
+- JDK 17+
+- `ANDROID_HOME` environment variable set
 
-A few resources to get you started if this is your first Flutter project:
+## Setup
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### 1. Generate signing keystore
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+keytool -genkey -v \
+  -keystore release-key.jks \
+  -keyalg RSA -keysize 2048 \
+  -validity 10000 \
+  -alias playcricketlive \
+  -dname "CN=Play Cricket Live, O=yourname, L=London, C=GB" \
+  -storepass YOUR_PASSWORD \
+  -keypass YOUR_PASSWORD
+```
+
+### 2. Create `app/keystore.properties`
+
+```properties
+storeFile=../release-key.jks
+storePassword=YOUR_PASSWORD
+keyAlias=playcricketlive
+keyPassword=YOUR_PASSWORD
+```
+
+### 3. Get SHA-1 for Google OAuth
+
+```bash
+keytool -list -v -keystore release-key.jks -alias playcricketlive -storepass YOUR_PASSWORD | grep SHA1
+```
+
+Register this SHA-1 + package name `com.squ1d123.playcricketlive` in [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → OAuth 2.0 Client ID (Android).
+
+Enable the **YouTube Data API v3** for your project.
+
+## Build
+
+```bash
+./gradlew assembleDebug     # Debug APK
+./gradlew assembleRelease   # Release APK
+./gradlew test              # Run unit tests
+```
+
+APKs output to `app/build/outputs/apk/{debug,release}/`.
+
+## Install
+
+```bash
+adb install -r app/build/outputs/apk/debug/app-debug.apk
+```
+
+## Architecture
+
+- **Kotlin** + **Jetpack Compose** for UI
+- **RootEncoder 2.7.2** for Camera2 + RTMP streaming + OpenGL overlays
+- **OkHttp** for HTTP (Play-Cricket/ResultsVault API)
+- **Google Sign-In** + **YouTube Data API v3** for broadcast creation
+- **SharedPreferences** for settings persistence
+- **javax.crypto** (3DES-ECB) for ResultsVault API authentication
