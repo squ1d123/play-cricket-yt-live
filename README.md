@@ -58,6 +58,13 @@ APKs output to `app/build/outputs/apk/{debug,release}/`.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+## Logs
+
+```bash
+adb logcat -s StreamingActivity    # Camera/zoom/streaming events
+adb logcat | grep -i "playcricket"  # All app logs
+```
+
 ## Architecture
 
 - **Kotlin** + **Jetpack Compose** for UI
