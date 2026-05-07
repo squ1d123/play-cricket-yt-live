@@ -65,6 +65,12 @@ adb logcat -s StreamingActivity    # Camera/zoom/streaming events
 adb logcat | grep -i "playcricket"  # All app logs
 ```
 
+## Telephoto lens access (OnePlus)
+
+Some OEMs (OnePlus, OPPO, Samsung) restrict third-party apps from accessing auxiliary cameras (telephoto, ultrawide). The workaround is to use a package name that's on the OEM's camera whitelist. This app uses `com.ss.android.ugc.aweme` (TikTok's package) which is commonly whitelisted.
+
+To set a different package name, change `applicationId` in `app/build.gradle.kts`.
+
 ## Architecture
 
 - **Kotlin** + **Jetpack Compose** for UI

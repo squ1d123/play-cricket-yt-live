@@ -16,7 +16,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.squ1d123.playcricketlive"
+        applicationId = "com.ss.android.ugc.aweme" // TikTok pkg — whitelisted for telephoto lens on OnePlus
         minSdk = 24
         targetSdk = 35
         versionCode = 1
