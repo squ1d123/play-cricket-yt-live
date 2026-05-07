@@ -278,7 +278,7 @@ fun StreamingScreen(
                     // Toggle overlay
                     IconButton(onClick = { showOverlay = !showOverlay }) {
                         Icon(
-                            if (showOverlay) Icons.Default.Star else Icons.Default.Clear,
+                            if (showOverlay) Icons.Default.Clear else Icons.Default.Star,
                             "Toggle overlay", tint = Color.White
                         )
                     }
