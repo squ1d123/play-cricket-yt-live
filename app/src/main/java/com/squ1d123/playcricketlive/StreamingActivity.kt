@@ -231,9 +231,27 @@ fun StreamingScreen(
                             "Toggle overlay", tint = Color.White
                         )
                     }
-                    // Switch camera
-                    IconButton(onClick = { getRtmpCamera()?.switchCamera() }) {
-                        Icon(Icons.Default.Refresh, "Switch camera", tint = Color.White)
+                    // Camera picker
+                    var showCameraPicker by remember { mutableStateOf(false) }
+                    Box {
+                        IconButton(onClick = { showCameraPicker = true }) {
+                            Icon(Icons.Default.Refresh, "Switch camera", tint = Color.White)
+                        }
+                        DropdownMenu(expanded = showCameraPicker, onDismissRequest = { showCameraPicker = false }) {
+                            val camera = getRtmpCamera()
+                            val cameras = camera?.camerasAvailable ?: emptyArray()
+                            val currentId = camera?.currentCameraId ?: ""
+                            cameras.forEachIndexed { index, id ->
+                                val label = "Camera $index (${id})"
+                                DropdownMenuItem(
+                                    text = { Text(if (id == currentId) "✓ $label" else label) },
+                                    onClick = {
+                                        try { camera?.switchCamera(id) } catch (_: Exception) {}
+                                        showCameraPicker = false
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }
