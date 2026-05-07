@@ -223,6 +223,16 @@ fun StreamingScreen(
                             }
                             android.util.Log.d("StreamingActivity", "Zoom range: ${camera.zoomRange}")
                             android.util.Log.d("StreamingActivity", "Current camera ID: ${camera.currentCameraId}")
+                            android.util.Log.d("StreamingActivity", "Physical cameras available: ${camera.physicalCamerasAvailable()}")
+                            // Try to find hidden physical cameras (4, 5, 6...)
+                            for (physId in 4..10) {
+                                try {
+                                    val chars = camManager.getCameraCharacteristics(physId.toString())
+                                    val fl = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                                    val pixels = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
+                                    android.util.Log.d("CameraInfo", "=== Hidden Camera ID: $physId === FL: ${fl?.joinToString()}, Pixels: ${pixels?.width}x${pixels?.height}")
+                                } catch (_: Exception) {}
+                            }
                             cameraReady = true
                         }
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
