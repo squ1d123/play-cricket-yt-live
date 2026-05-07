@@ -1,0 +1,41 @@
+--------- beginning of main
+05-07 16:38:30.266 16783 16783 D CameraInfo: === Camera ID: 0 ===
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Facing: BACK
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Focal lengths: 6.06
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Sensor pixels: 4096x3072
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Sensor physical: 9.17504mm x 6.88128mm
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Logical multi-cam: true
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Physical sub-cameras: [2, 3]
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Zoom range: [0.6, 10.0]
+05-07 16:38:30.266 16783 16783 D CameraInfo:   Top output sizes: 4096x3072, 4000x3000, 3840x2160
+05-07 16:38:30.269 16783 16783 D CameraInfo: === Camera ID: 1 ===
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Facing: FRONT
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Focal lengths: 3.23
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Sensor pixels: 3280x2464
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Sensor physical: 5.248mm x 3.9424mm
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Logical multi-cam: false
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Physical sub-cameras: []
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Zoom range: [1.0, 10.0]
+05-07 16:38:30.269 16783 16783 D CameraInfo:   Top output sizes: 3280x2464, 3264x2448, 3280x1856
+05-07 16:38:30.272 16783 16783 D CameraInfo: === Camera ID: 2 ===
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Facing: BACK
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Focal lengths: 6.06
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Sensor pixels: 4096x3072
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Sensor physical: 9.17504mm x 6.88128mm
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Logical multi-cam: false
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Physical sub-cameras: []
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Zoom range: [1.0, 10.0]
+05-07 16:38:30.272 16783 16783 D CameraInfo:   Top output sizes: 4096x3072, 4000x3000, 3840x2160
+05-07 16:38:30.274 16783 16783 D CameraInfo: === Camera ID: 3 ===
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Facing: BACK
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Focal lengths: 2.62
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Sensor pixels: 4000x3000
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Sensor physical: 6.4mm x 4.8mm
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Logical multi-cam: false
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Physical sub-cameras: []
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Zoom range: [1.0, 10.0]
+05-07 16:38:30.274 16783 16783 D CameraInfo:   Top output sizes: 4000x3000, 3840x2160, 3280x2464
+05-07 16:38:30.387 16783 16783 D StreamingActivity: Optical zooms: 6.06
+05-07 16:38:30.390 16783 16783 D StreamingActivity: Zoom range: [0.6, 10.0]
+05-07 16:38:30.390 16783 16783 D StreamingActivity: Current camera ID: 0
+
