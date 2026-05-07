@@ -25,9 +25,12 @@ class StreamSettingsRepository(context: Context) {
             ResolutionPreset("4K", 3840, 2160, "2160p"),
         )
 
+        val privacyOptions = listOf("public" to "Public", "unlisted" to "Unlisted", "private" to "Private")
+
         const val DEFAULT_BITRATE_INDEX = 1
         const val DEFAULT_RESOLUTION_INDEX = 1
         const val DEFAULT_ENCODER = "h264"
+        const val DEFAULT_PRIVACY = "public"
     }
 
     fun getScorecardUrl(): String = prefs.getString("scorecard_url", "") ?: ""
@@ -48,4 +51,7 @@ class StreamSettingsRepository(context: Context) {
     fun getYtAccountEmail(): String = prefs.getString("yt_account_email", "") ?: ""
     fun saveYtAccountEmail(email: String) = prefs.edit().putString("yt_account_email", email).apply()
     fun clearYtAccountEmail() = prefs.edit().remove("yt_account_email").apply()
+
+    fun getPrivacy(): String = prefs.getString("stream_privacy", DEFAULT_PRIVACY) ?: DEFAULT_PRIVACY
+    fun savePrivacy(privacy: String) = prefs.edit().putString("stream_privacy", privacy).apply()
 }

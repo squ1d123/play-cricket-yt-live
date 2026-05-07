@@ -355,7 +355,8 @@ fun StreamingScreen(
                                 scope.launch {
                                     Toast.makeText(context, "Creating broadcast...", Toast.LENGTH_SHORT).show()
                                     val url = ytService.createAndBindStream(
-                                        title = "De Beauvoir Dugongs Live - ${java.time.LocalDate.now()}"
+                                        title = "De Beauvoir Dugongs Live - ${java.time.LocalDate.now()}",
+                                        privacy = settings.getPrivacy()
                                     )
                                     if (url != null) {
                                         camera.startStream(url)

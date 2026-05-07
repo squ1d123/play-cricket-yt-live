@@ -44,6 +44,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     }
     var selectedResolutionIndex by remember { mutableIntStateOf(settings.getResolutionIndex()) }
     var selectedEncoder by remember { mutableStateOf(settings.getVideoEncoder()) }
+    var selectedPrivacy by remember { mutableStateOf(settings.getPrivacy()) }
     var ytEmail by remember { mutableStateOf(ytService.currentEmail) }
     var snackMessage by remember { mutableStateOf<String?>(null) }
 
@@ -160,6 +161,24 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
 
+            // Stream privacy
+            var privacyExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(expanded = privacyExpanded, onExpandedChange = { privacyExpanded = it }) {
+                OutlinedTextField(
+                    value = StreamSettingsRepository.privacyOptions.first { it.first == selectedPrivacy }.second,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Stream Privacy") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(privacyExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+                ExposedDropdownMenu(expanded = privacyExpanded, onDismissRequest = { privacyExpanded = false }) {
+                    StreamSettingsRepository.privacyOptions.forEach { (key, label) ->
+                        DropdownMenuItem(text = { Text(label) }, onClick = { selectedPrivacy = key; privacyExpanded = false })
+                    }
+                }
+            }
+
             Spacer(Modifier.height(16.dp))
 
             // Save button
@@ -169,6 +188,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     settings.saveBitrate(StreamSettingsRepository.bitratePresets[selectedBitrateIndex].bitrate)
                     settings.saveResolutionIndex(selectedResolutionIndex)
                     settings.saveVideoEncoder(selectedEncoder)
+                    settings.savePrivacy(selectedPrivacy)
                     snackMessage = "Settings saved!"
                 },
                 modifier = Modifier.fillMaxWidth(),
