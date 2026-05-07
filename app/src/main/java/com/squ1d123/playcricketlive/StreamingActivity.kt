@@ -244,7 +244,11 @@ fun StreamingScreen(
                             val cameraManager = remember {
                                 context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
                             }
-                            cameras.forEach { id ->
+                            // List all cameras from CameraManager (includes physical cameras)
+                            val allCameraIds = remember {
+                                try { cameraManager.cameraIdList.toList() } catch (_: Exception) { cameras.toList() }
+                            }
+                            allCameraIds.forEach { id ->
                                 val label = remember(id) {
                                     try {
                                         val chars = cameraManager.getCameraCharacteristics(id)
@@ -256,8 +260,8 @@ fun StreamingScreen(
                                         val facingStr = when (facing) {
                                             android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT -> "Front"
                                             android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK -> when {
-                                                fl > 5f -> "Tele"
-                                                fl < 3f -> "Ultra-wide"
+                                                fl > 7f -> "Tele"
+                                                fl < 3.5f -> "Ultra-wide"
                                                 else -> "Wide"
                                             }
                                             else -> "External"
