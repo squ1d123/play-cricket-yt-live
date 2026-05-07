@@ -5,8 +5,6 @@ import android.graphics.*
 class ScoreOverlayRenderer(private val streamWidth: Int, private val streamHeight: Int) {
 
     private val overlayHeight = (streamHeight * 0.08f).toInt()
-    private val bitmap = Bitmap.createBitmap(streamWidth, overlayHeight, Bitmap.Config.ARGB_8888)
-    private val canvas = Canvas(bitmap)
 
     private val bgPaint = Paint().apply { color = Color.argb(220, 0, 0, 0); style = Paint.Style.FILL }
     private val whitePaint = Paint().apply { color = Color.WHITE; isAntiAlias = true; typeface = Typeface.DEFAULT_BOLD }
@@ -20,7 +18,8 @@ class ScoreOverlayRenderer(private val streamWidth: Int, private val streamHeigh
         score: String, overs: String,
         bowlerName: String, bowlerWickets: Int, bowlerRuns: Int, bowlerOvers: Int,
     ): Bitmap {
-        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        val bitmap = Bitmap.createBitmap(streamWidth, overlayHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
         canvas.drawRect(0f, 0f, streamWidth.toFloat(), overlayHeight.toFloat(), bgPaint)
 
         val fontSize = overlayHeight * 0.35f
