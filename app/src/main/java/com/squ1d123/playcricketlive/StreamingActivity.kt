@@ -280,6 +280,27 @@ fun StreamingScreen(
                     )
                 }
             }
+
+            // Zoom slider (right edge, vertical)
+            if (cameraReady) {
+                var zoomLevel by remember { mutableFloatStateOf(1f) }
+                val zoomRange = remember(cameraReady) { getRtmpCamera()?.zoomRange }
+                val minZoom = zoomRange?.lower ?: 1f
+                val maxZoom = zoomRange?.upper ?: 1f
+
+                if (maxZoom > minZoom) {
+                    Slider(
+                        value = zoomLevel,
+                        onValueChange = { zoomLevel = it; getRtmpCamera()?.setZoom(it) },
+                        valueRange = minZoom..maxZoom,
+                        modifier = Modifier
+                            .align(Alignment.CenterEnd)
+                            .padding(end = 16.dp)
+                            .height(200.dp),
+                        colors = SliderDefaults.colors(thumbColor = Color.Red, activeTrackColor = Color.Red)
+                    )
+                }
+            }
         } else {
             // No permissions
             Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
