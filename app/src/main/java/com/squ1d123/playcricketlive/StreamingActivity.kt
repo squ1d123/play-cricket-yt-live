@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -289,19 +290,21 @@ fun StreamingScreen(
                 val maxZoom = zoomRange?.upper ?: 1f
 
                 if (maxZoom > minZoom) {
-                    Column(
+                    Box(
                         modifier = Modifier
                             .align(Alignment.CenterEnd)
                             .padding(end = 8.dp)
-                            .width(32.dp)
-                            .fillMaxHeight(0.5f),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .width(48.dp)
+                            .fillMaxHeight(0.6f),
+                        contentAlignment = Alignment.Center
                     ) {
                         Slider(
                             value = zoomLevel,
                             onValueChange = { zoomLevel = it; getRtmpCamera()?.setZoom(it) },
                             valueRange = minZoom..maxZoom,
-                            modifier = Modifier.fillMaxHeight(),
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .graphicsLayer { rotationZ = -90f },
                             colors = SliderDefaults.colors(thumbColor = Color.Red, activeTrackColor = Color.Red)
                         )
                     }
