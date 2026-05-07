@@ -81,7 +81,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             if (ytEmail != null) {
                 Text("Signed in as: $ytEmail", color = Color.Green)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { signInLauncher.launch(ytService.getSignInIntent()) }) { Text("Switch") }
+                    Button(onClick = { ytService.signOutForSwitch(); ytEmail = null; signInLauncher.launch(ytService.getSignInIntent()) }) { Text("Switch") }
                     Button(onClick = { scope.launch { ytService.signOut(); ytEmail = null; snackMessage = "Signed out" } },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Gray)) { Text("Sign Out") }
                 }

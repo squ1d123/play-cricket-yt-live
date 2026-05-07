@@ -63,9 +63,14 @@ class YouTubeLiveService(private val context: Context) {
     }
 
     suspend fun signOut() {
-        withContext(Dispatchers.IO) {
-            googleSignInClient.signOut().addOnCompleteListener {}
-        }
+        googleSignInClient.signOut()
+        account = null
+        youtubeApi = null
+        settings.clearYtAccountEmail()
+    }
+
+    fun signOutForSwitch() {
+        googleSignInClient.signOut()
         account = null
         youtubeApi = null
         settings.clearYtAccountEmail()
