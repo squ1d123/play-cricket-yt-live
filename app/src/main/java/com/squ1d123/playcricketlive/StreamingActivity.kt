@@ -179,7 +179,7 @@ fun StreamingScreen(
                             val resolution = settings.getResolution()
                             val camera = RtmpCamera2(glView, activity)
                             setRtmpCamera(camera)
-                            camera.prepareVideo(resolution.width, resolution.height, settings.getBitrate())
+                            camera.prepareVideo(resolution.width, resolution.height, 60, settings.getBitrate(), 0)
                             camera.prepareAudio(128000, 44100, true)
                             camera.startPreview()
                             cameraReady = true
