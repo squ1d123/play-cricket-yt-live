@@ -181,6 +181,39 @@ fun StreamingScreen(
                             setRtmpCamera(camera)
                             camera.prepareVideo(resolution.width, resolution.height, 60, settings.getBitrate(), 0)
                             camera.prepareAudio(128000, 44100, true)
+
+                            // Log detailed camera info
+                            val camManager = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                            for (id in camManager.cameraIdList) {
+                                try {
+                                    val chars = camManager.getCameraCharacteristics(id)
+                                    val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
+                                    val facingStr = when (facing) { 0 -> "FRONT"; 1 -> "BACK"; 2 -> "EXTERNAL"; else -> "?" }
+                                    val focalLengths = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
+                                    val sensorSize = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
+                                    val physicalSize = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)
+                                    val capabilities = chars.get(android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
+                                    val isLogical = capabilities?.contains(android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_LOGICAL_MULTI_CAMERA) == true
+                                    val physicalCamIds = if (android.os.Build.VERSION.SDK_INT >= 28) chars.physicalCameraIds else emptySet()
+                                    val zoomRange = if (android.os.Build.VERSION.SDK_INT >= 30) chars.get(android.hardware.camera2.CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE) else null
+                                    val outputSizes = chars.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+                                        ?.getOutputSizes(android.graphics.ImageFormat.JPEG)
+                                        ?.take(3)?.joinToString { "${it.width}x${it.height}" }
+
+                                    android.util.Log.d("CameraInfo", "=== Camera ID: $id ===")
+                                    android.util.Log.d("CameraInfo", "  Facing: $facingStr")
+                                    android.util.Log.d("CameraInfo", "  Focal lengths: ${focalLengths?.joinToString()}")
+                                    android.util.Log.d("CameraInfo", "  Sensor pixels: ${sensorSize?.width}x${sensorSize?.height}")
+                                    android.util.Log.d("CameraInfo", "  Sensor physical: ${physicalSize?.width}mm x ${physicalSize?.height}mm")
+                                    android.util.Log.d("CameraInfo", "  Logical multi-cam: $isLogical")
+                                    android.util.Log.d("CameraInfo", "  Physical sub-cameras: $physicalCamIds")
+                                    android.util.Log.d("CameraInfo", "  Zoom range: $zoomRange")
+                                    android.util.Log.d("CameraInfo", "  Top output sizes: $outputSizes")
+                                } catch (e: Exception) {
+                                    android.util.Log.d("CameraInfo", "Camera $id: error ${e.message}")
+                                }
+                            }
+
                             // Start on logical camera "0" to enable multi-camera zoom switching
                             camera.startPreview("0")
                             // Log available optical zoom levels
@@ -189,6 +222,7 @@ fun StreamingScreen(
                                 android.util.Log.d("StreamingActivity", "Optical zooms: ${opticalZooms.joinToString()}")
                             }
                             android.util.Log.d("StreamingActivity", "Zoom range: ${camera.zoomRange}")
+                            android.util.Log.d("StreamingActivity", "Current camera ID: ${camera.currentCameraId}")
                             cameraReady = true
                         }
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
