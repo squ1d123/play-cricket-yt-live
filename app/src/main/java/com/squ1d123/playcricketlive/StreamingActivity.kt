@@ -339,6 +339,7 @@ fun StreamingScreen(
                 val zoomRange = remember(cameraReady) { getRtmpCamera()?.zoomRange }
                 val minZoom = zoomRange?.lower ?: 1f
                 val maxZoom = zoomRange?.upper ?: 1f
+                val opticalZooms = remember(cameraReady) { getRtmpCamera()?.opticalZooms ?: emptyArray() }
 
                 if (maxZoom > minZoom) {
                     Box(
@@ -359,7 +360,12 @@ fun StreamingScreen(
                             colors = SliderDefaults.colors(thumbColor = Color.Red, activeTrackColor = Color.Red)
                         )
                         Text(
-                            "${String.format("%.1f", zoomLevel)}x",
+                            buildString {
+                                append(String.format("%.1f", zoomLevel))
+                                append("x")
+                                val nearOptical = opticalZooms.any { kotlin.math.abs(it - zoomLevel) < 0.2f }
+                                if (nearOptical) append(" 🔭")
+                            },
                             color = Color.White,
                             fontSize = 12.sp,
                             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp)
