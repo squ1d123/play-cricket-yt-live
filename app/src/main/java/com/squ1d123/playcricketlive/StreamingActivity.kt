@@ -251,16 +251,18 @@ fun StreamingScreen(
                                         val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
                                         val focalLengths = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
                                         val fl = focalLengths?.firstOrNull() ?: 0f
+                                        val sensorSize = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
+                                        val mp = if (sensorSize != null) "${(sensorSize.width.toLong() * sensorSize.height / 1_000_000)}MP" else ""
                                         val facingStr = when (facing) {
                                             android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT -> "Front"
                                             android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK -> when {
-                                                fl > 5f -> "Tele ${(fl * 6.25f).toInt()}mm"
-                                                fl < 3f -> "Ultra-wide ${(fl * 6.25f).toInt()}mm"
-                                                else -> "Wide ${(fl * 6.25f).toInt()}mm"
+                                                fl > 5f -> "Tele"
+                                                fl < 3f -> "Ultra-wide"
+                                                else -> "Wide"
                                             }
                                             else -> "External"
                                         }
-                                        facingStr
+                                        "$facingStr ${String.format("%.1f", fl)}mm $mp [id:$id]"
                                     } catch (_: Exception) { "Camera $id" }
                                 }
                                 DropdownMenuItem(
