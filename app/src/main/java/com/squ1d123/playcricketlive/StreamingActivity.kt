@@ -342,6 +342,12 @@ fun StreamingScreen(
                             .fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
+                        Text(
+                            "${String.format("%.1f", zoomLevel)}x",
+                            color = Color.White,
+                            fontSize = 12.sp,
+                            modifier = Modifier.align(Alignment.TopCenter).padding(top = 4.dp)
+                        )
                         Slider(
                             value = zoomLevel,
                             onValueChange = { zoomLevel = it; getRtmpCamera()?.setZoom(it) },
