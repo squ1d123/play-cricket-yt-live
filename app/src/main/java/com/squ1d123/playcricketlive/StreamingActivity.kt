@@ -295,7 +295,7 @@ fun StreamingScreen(
                             .align(Alignment.CenterEnd)
                             .padding(end = 8.dp)
                             .width(48.dp)
-                            .fillMaxHeight(0.6f),
+                            .fillMaxHeight(0.9f),
                         contentAlignment = Alignment.Center
                     ) {
                         Slider(
