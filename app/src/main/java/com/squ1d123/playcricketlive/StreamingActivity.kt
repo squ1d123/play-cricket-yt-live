@@ -181,7 +181,14 @@ fun StreamingScreen(
                             setRtmpCamera(camera)
                             camera.prepareVideo(resolution.width, resolution.height, 60, settings.getBitrate(), 0)
                             camera.prepareAudio(128000, 44100, true)
-                            camera.startPreview()
+                            // Start on logical camera "0" to enable multi-camera zoom switching
+                            camera.startPreview("0")
+                            // Log available optical zoom levels
+                            val opticalZooms = camera.opticalZooms
+                            if (opticalZooms != null && opticalZooms.isNotEmpty()) {
+                                android.util.Log.d("StreamingActivity", "Optical zooms: ${opticalZooms.joinToString()}")
+                            }
+                            android.util.Log.d("StreamingActivity", "Zoom range: ${camera.zoomRange}")
                             cameraReady = true
                         }
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
