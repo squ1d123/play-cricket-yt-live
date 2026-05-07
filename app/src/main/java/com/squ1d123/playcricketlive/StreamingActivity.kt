@@ -352,7 +352,17 @@ fun StreamingScreen(
                     ) {
                         Slider(
                             value = zoomLevel,
-                            onValueChange = { zoomLevel = it; getRtmpCamera()?.setZoom(it) },
+                            onValueChange = { value ->
+                                zoomLevel = value
+                                val camera = getRtmpCamera() ?: return@Slider
+                                // Try optical zoom at known switch points, otherwise digital
+                                val nearestOptical = opticalZooms.firstOrNull { kotlin.math.abs(it - value) < 0.3f }
+                                if (nearestOptical != null) {
+                                    camera.setOpticalZoom(nearestOptical)
+                                } else {
+                                    camera.setZoom(value)
+                                }
+                            },
                             valueRange = minZoom..maxZoom,
                             modifier = Modifier
                                 .fillMaxHeight()
