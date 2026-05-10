@@ -215,7 +215,7 @@ fun StreamingScreen(
                             }
 
                             // Start on logical camera "0" to enable multi-camera zoom switching
-                            camera.startPreview("0")
+                            camera.startPreview("5")
                             // Log available optical zoom levels
                             val opticalZooms = camera.opticalZooms
                             if (opticalZooms != null && opticalZooms.isNotEmpty()) {
@@ -384,7 +384,21 @@ fun StreamingScreen(
                 val zoomRange = remember(cameraReady) { getRtmpCamera()?.zoomRange }
                 val minZoom = zoomRange?.lower ?: 1f
                 val maxZoom = zoomRange?.upper ?: 1f
-                val opticalZooms = remember(cameraReady) { getRtmpCamera()?.opticalZooms ?: emptyArray() }
+                val camFocalLengths = remember(cameraReady) {
+                    try {
+                        val mgr = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                        val chars = mgr.getCameraCharacteristics("5")
+                        if (android.os.Build.VERSION.SDK_INT >= 28) {
+                            chars.physicalCameraIds.mapNotNull { id ->
+                                try {
+                                    val pc = mgr.getCameraCharacteristics(id)
+                                    val fl = pc.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.firstOrNull() ?: return@mapNotNull null
+                                    id to fl
+                                } catch (_: Exception) { null }
+                            }
+                        } else emptyList()
+                    } catch (_: Exception) { emptyList() }
+                }
 
                 if (maxZoom > minZoom) {
                     Box(
@@ -400,13 +414,16 @@ fun StreamingScreen(
                             onValueChange = { value ->
                                 zoomLevel = value
                                 val camera = getRtmpCamera() ?: return@Slider
-                                // Try optical zoom at known switch points, otherwise digital
-                                val nearestOptical = opticalZooms.firstOrNull { kotlin.math.abs(it - value) < 0.3f }
-                                if (nearestOptical != null) {
-                                    camera.setOpticalZoom(nearestOptical)
-                                } else {
-                                    camera.setZoom(value)
+                                val wideFl = 6.06f
+                                val fl = when {
+                                    value <= 0.6f -> 2.62f
+                                    value >= 2.0f -> 13.3f
+                                    else -> wideFl
                                 }
+                                if (kotlin.math.abs(fl - wideFl) > 0.01f) {
+                                    camera.setOpticalZoom(fl)
+                                }
+                                camera.setZoom(value)
                             },
                             valueRange = minZoom..maxZoom,
                             modifier = Modifier
@@ -418,8 +435,6 @@ fun StreamingScreen(
                             buildString {
                                 append(String.format("%.1f", zoomLevel))
                                 append("x")
-                                val nearOptical = opticalZooms.any { kotlin.math.abs(it - zoomLevel) < 0.2f }
-                                if (nearOptical) append(" 🔭")
                             },
                             color = Color.White,
                             fontSize = 12.sp,
