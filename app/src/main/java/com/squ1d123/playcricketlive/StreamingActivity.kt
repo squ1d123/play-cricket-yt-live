@@ -3,6 +3,7 @@ package com.squ1d123.playcricketlive
 import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
+import android.media.MediaRecorder
 import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.WindowManager
@@ -31,6 +32,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.pedro.common.ConnectChecker
 import com.pedro.encoder.input.gl.render.filters.`object`.ImageObjectFilterRender
+import com.pedro.encoder.utils.CodecUtil
 import com.pedro.encoder.utils.gl.TranslateTo
 import com.pedro.library.rtmp.RtmpCamera2
 import com.pedro.library.view.OpenGlView
@@ -180,8 +182,9 @@ fun StreamingScreen(
                             val resolution = settings.getResolution()
                             val camera = RtmpCamera2(glView, activity)
                             setRtmpCamera(camera)
+                            camera.forceCodecType(CodecUtil.CodecType.FIRST_COMPATIBLE_FOUND, CodecUtil.CodecType.SOFTWARE)
                             camera.prepareVideo(resolution.width, resolution.height, 60, settings.getBitrate(), 0)
-                            camera.prepareAudio(128000, 44100, true)
+                            camera.prepareAudio(MediaRecorder.AudioSource.CAMCORDER, 192000, 48000, false, true, true)
 
                             // Log detailed camera info
                             val camManager = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
