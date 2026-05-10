@@ -28,6 +28,7 @@ data class MatchData(
     val bowlingTeam: String = "",
     val bowlingInningsNumber: Int = 0,
     val bowlingResultId: Int? = null,
+    val targetScore: String = "",
 )
 
 data class BatsmanData(val name: String, val runs: Int, val balls: Int, val notOut: Boolean = false)
@@ -176,6 +177,12 @@ class PlayCricketScraper(private val client: OkHttpClient = OkHttpClient()) {
         val batsmen = parseBatsmen(battingTeamJson)
         val bowlers = parseBowlers(battingTeamJson)
 
+        val isSecondInnings = if (homeBattedFirst) awayRuns > 0 else homeRuns > 0
+        val targetScore = if (isSecondInnings) {
+            val firstInningsRuns = if (homeBattedFirst) getFirstInningsRuns(homeTeam) else getFirstInningsRuns(awayTeam)
+            "Target: ${firstInningsRuns + 1}"
+        } else ""
+
         return MatchData(
             rvMatchId = rvMatchId,
             homeTeam = homeTeam.optString("club_name", ""),
@@ -188,7 +195,14 @@ class PlayCricketScraper(private val client: OkHttpClient = OkHttpClient()) {
             battingScore = battingInnings.first, battingOvers = battingInnings.second,
             bowlingTeam = bowlingTeamName,
             bowlingInningsNumber = bowlingInningsNum, bowlingResultId = bowlingResultId,
+            targetScore = targetScore,
         )
+    }
+
+    private fun getFirstInningsRuns(team: JSONObject): Int {
+        val innings = team.optJSONArray("Innings") ?: return 0
+        if (innings.length() == 0) return 0
+        return innings.getJSONObject(0).optInt("runs", 0)
     }
 
     private fun getInningsRuns(team: JSONObject): Int {

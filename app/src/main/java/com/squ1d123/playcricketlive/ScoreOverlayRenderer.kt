@@ -17,6 +17,7 @@ class ScoreOverlayRenderer(private val streamWidth: Int, private val streamHeigh
         batsman2Name: String, batsman2Runs: Int, batsman2Balls: Int,
         score: String, overs: String,
         bowlerName: String, bowlerWickets: Int, bowlerRuns: Int, bowlerOvers: Int,
+        targetScore: String = "",
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(streamWidth, overlayHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -47,10 +48,18 @@ class ScoreOverlayRenderer(private val streamWidth: Int, private val streamHeigh
             canvas.drawText(b2, x, yCenter, dimPaint)
         }
 
-        // Center: Score
+        // Center: Score + Target
         whitePaint.textSize = bigFontSize
         whitePaint.textAlign = Paint.Align.CENTER
         canvas.drawText(score, streamWidth / 2f, yCenter, whitePaint)
+
+        if (targetScore.isNotEmpty()) {
+            greenPaint.textSize = bigFontSize * 0.65f
+            greenPaint.textAlign = Paint.Align.LEFT
+            canvas.drawText(targetScore, streamWidth / 2f + bigFontSize * 3.5f, yCenter, greenPaint)
+            greenPaint.textAlign = Paint.Align.LEFT
+        }
+
         if (overs.isNotEmpty()) {
             dimPaint.textSize = smallFontSize
             dimPaint.textAlign = Paint.Align.CENTER

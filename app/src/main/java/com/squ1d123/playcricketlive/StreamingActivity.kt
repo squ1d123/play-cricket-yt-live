@@ -137,6 +137,7 @@ fun StreamingScreen(
                         bowlerWickets = bowler?.wickets ?: 0,
                         bowlerRuns = bowler?.runs ?: 0,
                         bowlerOvers = bowler?.overs ?: 0,
+                        targetScore = matchData.targetScore,
                     )
 
                     val camera = getRtmpCamera()
