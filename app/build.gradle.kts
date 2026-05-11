@@ -16,8 +16,12 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        // applicationId = "com.ss.android.ugc.aweme" // TikTok pkg — whitelisted for telephoto lens on OnePlus
-        applicationId = "com.meitu.meiyancamera" // TikTok pkg — whitelisted for telephoto lens on OnePlus
+        // applicationId = "com.meitu.meiyancamera" // TikTok pkg — whitelisted
+        // for telephoto lens on OnePlus, however there is a background system
+        // camera service that checks the uid of the running app to validate
+        // that the uid should be the expected for for ticktok, then this
+        // revokes the camera access.
+        applicationId = "com.squ1d123.playcricketlive"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
