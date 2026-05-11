@@ -69,7 +69,6 @@ class StreamingActivity : ComponentActivity(), ConnectChecker {
         }
     }
 
-    // ConnectChecker callbacks
     override fun onConnectionStarted(url: String) {}
     override fun onConnectionSuccess() { runOnUiThread { Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show() } }
     override fun onConnectionFailed(reason: String) { runOnUiThread { Toast.makeText(this, "Connection failed: $reason", Toast.LENGTH_SHORT).show(); rtmpCamera?.stopStream() } }
@@ -98,6 +97,7 @@ fun StreamingScreen(
     var showOverlay by remember { mutableStateOf(true) }
     val scraper = remember { PlayCricketScraper() }
     val overlayFilterRef = remember { mutableStateOf<ImageObjectFilterRender?>(null) }
+    var isFrontCamera by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { perms ->
         hasPermissions = perms.values.all { it }
@@ -113,7 +113,6 @@ fun StreamingScreen(
         }
     }
 
-    // Periodic score scraping + overlay update
     LaunchedEffect(cameraReady, showOverlay) {
         if (!cameraReady) return@LaunchedEffect
         val scorecardUrl = settings.getScorecardUrl()
@@ -172,7 +171,6 @@ fun StreamingScreen(
 
     Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         if (hasPermissions) {
-            // Camera preview
             AndroidView(
                 factory = { ctx ->
                     val glView = OpenGlView(ctx)
@@ -185,58 +183,7 @@ fun StreamingScreen(
                             camera.forceCodecType(CodecUtil.CodecType.FIRST_COMPATIBLE_FOUND, CodecUtil.CodecType.SOFTWARE)
                             camera.prepareVideo(resolution.width, resolution.height, 60, settings.getBitrate(), 0)
                             camera.prepareAudio(MediaRecorder.AudioSource.CAMCORDER, 192000, 48000, false, true, true)
-
-                            // Log detailed camera info
-                            val camManager = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                            for (id in camManager.cameraIdList) {
-                                try {
-                                    val chars = camManager.getCameraCharacteristics(id)
-                                    val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                    val facingStr = when (facing) { 0 -> "FRONT"; 1 -> "BACK"; 2 -> "EXTERNAL"; else -> "?" }
-                                    val focalLengths = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
-                                    val sensorSize = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
-                                    val physicalSize = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE)
-                                    val capabilities = chars.get(android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)
-                                    val isLogical = capabilities?.contains(android.hardware.camera2.CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_LOGICAL_MULTI_CAMERA) == true
-                                    val physicalCamIds = if (android.os.Build.VERSION.SDK_INT >= 28) chars.physicalCameraIds else emptySet()
-                                    val zoomRange = if (android.os.Build.VERSION.SDK_INT >= 30) chars.get(android.hardware.camera2.CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE) else null
-                                    val outputSizes = chars.get(android.hardware.camera2.CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
-                                        ?.getOutputSizes(android.graphics.ImageFormat.JPEG)
-                                        ?.take(3)?.joinToString { "${it.width}x${it.height}" }
-
-                                    android.util.Log.d("CameraInfo", "=== Camera ID: $id ===")
-                                    android.util.Log.d("CameraInfo", "  Facing: $facingStr")
-                                    android.util.Log.d("CameraInfo", "  Focal lengths: ${focalLengths?.joinToString()}")
-                                    android.util.Log.d("CameraInfo", "  Sensor pixels: ${sensorSize?.width}x${sensorSize?.height}")
-                                    android.util.Log.d("CameraInfo", "  Sensor physical: ${physicalSize?.width}mm x ${physicalSize?.height}mm")
-                                    android.util.Log.d("CameraInfo", "  Logical multi-cam: $isLogical")
-                                    android.util.Log.d("CameraInfo", "  Physical sub-cameras: $physicalCamIds")
-                                    android.util.Log.d("CameraInfo", "  Zoom range: $zoomRange")
-                                    android.util.Log.d("CameraInfo", "  Top output sizes: $outputSizes")
-                                } catch (e: Exception) {
-                                    android.util.Log.d("CameraInfo", "Camera $id: error ${e.message}")
-                                }
-                            }
-
-                            // Start on logical camera "0" to enable multi-camera zoom switching
-                            camera.startPreview("5")
-                            // Log available optical zoom levels
-                            val opticalZooms = camera.opticalZooms
-                            if (opticalZooms != null && opticalZooms.isNotEmpty()) {
-                                android.util.Log.d("StreamingActivity", "Optical zooms: ${opticalZooms.joinToString()}")
-                            }
-                            android.util.Log.d("StreamingActivity", "Zoom range: ${camera.zoomRange}")
-                            android.util.Log.d("StreamingActivity", "Current camera ID: ${camera.currentCameraId}")
-                            android.util.Log.d("StreamingActivity", "Physical cameras available: ${camera.physicalCamerasAvailable()}")
-                            // Try to find hidden physical cameras (4, 5, 6...)
-                            for (physId in 4..10) {
-                                try {
-                                    val chars = camManager.getCameraCharacteristics(physId.toString())
-                                    val fl = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
-                                    val pixels = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
-                                    android.util.Log.d("CameraInfo", "=== Hidden Camera ID: $physId === FL: ${fl?.joinToString()}, Pixels: ${pixels?.width}x${pixels?.height}")
-                                } catch (_: Exception) {}
-                            }
+                            camera.startPreview("0")
                             cameraReady = true
                         }
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
@@ -253,12 +200,10 @@ fun StreamingScreen(
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Top bar - status
             Row(
                 modifier = Modifier.fillMaxWidth().padding(16.dp).align(Alignment.TopStart),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // LIVE indicator
                 Surface(
                     color = if (isStreaming) Color.Red else Color.Gray,
                     shape = MaterialTheme.shapes.small
@@ -279,68 +224,31 @@ fun StreamingScreen(
                     } else {
                         Icon(Icons.Default.CheckCircle, "Signed in", tint = Color.Green, modifier = Modifier.size(24.dp).align(Alignment.CenterVertically))
                     }
-                    // Toggle overlay
                     IconButton(onClick = { showOverlay = !showOverlay }) {
                         Icon(
                             if (showOverlay) Icons.Default.Clear else Icons.Default.Star,
                             "Toggle overlay", tint = Color.White
                         )
                     }
-                    // Camera picker
-                    var showCameraPicker by remember { mutableStateOf(false) }
-                    Box {
-                        IconButton(onClick = { showCameraPicker = true }) {
-                            Icon(Icons.Default.Refresh, "Switch camera", tint = Color.White)
-                        }
-                        DropdownMenu(expanded = showCameraPicker, onDismissRequest = { showCameraPicker = false }) {
-                            val camera = getRtmpCamera()
-                            val cameras = camera?.camerasAvailable ?: emptyArray()
-                            val currentId = camera?.currentCameraId ?: ""
-                            val cameraManager = remember {
-                                context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
+                    IconButton(onClick = {
+                        val camera = getRtmpCamera()
+                        val currentId = camera?.currentCameraId
+                        try {
+                            if (currentId == "0") {
+                                camera?.switchCamera("1")
+                                isFrontCamera = true
+                            } else {
+                                camera?.switchCamera("0")
+                                isFrontCamera = false
                             }
-                            // List all cameras from CameraManager (includes physical cameras)
-                            val allCameraIds = remember {
-                                try { cameraManager.cameraIdList.toList() } catch (_: Exception) { cameras.toList() }
-                            }
-                            allCameraIds.forEach { id ->
-                                val label = remember(id) {
-                                    try {
-                                        val chars = cameraManager.getCameraCharacteristics(id)
-                                        val facing = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_FACING)
-                                        val focalLengths = chars.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)
-                                        val fl = focalLengths?.firstOrNull() ?: 0f
-                                        val sensorSize = chars.get(android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE)
-                                        val mp = if (sensorSize != null) "${(sensorSize.width.toLong() * sensorSize.height / 1_000_000)}MP" else ""
-                                        val facingStr = when (facing) {
-                                            android.hardware.camera2.CameraCharacteristics.LENS_FACING_FRONT -> "Front"
-                                            android.hardware.camera2.CameraCharacteristics.LENS_FACING_BACK -> when {
-                                                fl > 7f -> "Tele"
-                                                fl < 3.5f -> "Ultra-wide"
-                                                else -> "Wide"
-                                            }
-                                            else -> "External"
-                                        }
-                                        "$facingStr ${String.format("%.1f", fl)}mm $mp [id:$id]"
-                                    } catch (_: Exception) { "Camera $id" }
-                                }
-                                DropdownMenuItem(
-                                    text = { Text(if (id == currentId) "✓ $label" else label) },
-                                    onClick = {
-                                        try { camera?.switchCamera(id) } catch (_: Exception) {}
-                                        showCameraPicker = false
-                                    }
-                                )
-                            }
-                        }
+                        } catch (_: Exception) {}
+                    }) {
+                        Icon(Icons.Default.Refresh, "Switch camera", tint = Color.White)
                     }
                 }
             }
 
-            // Stream button
-            Box(
-                modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)
-            ) {
+            Box(modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp)) {
                 Box(
                     modifier = Modifier
                         .size(48.dp)
@@ -382,27 +290,11 @@ fun StreamingScreen(
                 }
             }
 
-            // Zoom slider (right edge, vertical)
-            if (cameraReady) {
+            if (cameraReady && !isFrontCamera) {
                 var zoomLevel by remember { mutableFloatStateOf(1f) }
                 val zoomRange = remember(cameraReady) { getRtmpCamera()?.zoomRange }
                 val minZoom = zoomRange?.lower ?: 1f
                 val maxZoom = zoomRange?.upper ?: 1f
-                val camFocalLengths = remember(cameraReady) {
-                    try {
-                        val mgr = context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager
-                        val chars = mgr.getCameraCharacteristics("5")
-                        if (android.os.Build.VERSION.SDK_INT >= 28) {
-                            chars.physicalCameraIds.mapNotNull { id ->
-                                try {
-                                    val pc = mgr.getCameraCharacteristics(id)
-                                    val fl = pc.get(android.hardware.camera2.CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS)?.firstOrNull() ?: return@mapNotNull null
-                                    id to fl
-                                } catch (_: Exception) { null }
-                            }
-                        } else emptyList()
-                    } catch (_: Exception) { emptyList() }
-                }
 
                 if (maxZoom > minZoom) {
                     Box(
@@ -417,17 +309,7 @@ fun StreamingScreen(
                             value = zoomLevel,
                             onValueChange = { value ->
                                 zoomLevel = value
-                                val camera = getRtmpCamera() ?: return@Slider
-                                val wideFl = 6.06f
-                                val fl = when {
-                                    value <= 0.6f -> 2.62f
-                                    value >= 2.0f -> 13.3f
-                                    else -> wideFl
-                                }
-                                if (kotlin.math.abs(fl - wideFl) > 0.01f) {
-                                    camera.setOpticalZoom(fl)
-                                }
-                                camera.setZoom(value)
+                                getRtmpCamera()?.setZoom(value)
                             },
                             valueRange = minZoom..maxZoom,
                             modifier = Modifier
@@ -436,10 +318,7 @@ fun StreamingScreen(
                             colors = SliderDefaults.colors(thumbColor = Color.Red, activeTrackColor = Color.Red)
                         )
                         Text(
-                            buildString {
-                                append(String.format("%.1f", zoomLevel))
-                                append("x")
-                            },
+                            "${String.format("%.1f", zoomLevel)}x",
                             color = Color.White,
                             fontSize = 12.sp,
                             modifier = Modifier.align(Alignment.CenterEnd).padding(end = 4.dp)
@@ -448,7 +327,6 @@ fun StreamingScreen(
                 }
             }
         } else {
-            // No permissions
             Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("Camera & microphone permissions required", color = Color.White)
                 Spacer(Modifier.height(16.dp))
