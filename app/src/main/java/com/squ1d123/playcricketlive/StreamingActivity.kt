@@ -159,7 +159,7 @@ fun StreamingScreen(
                     }
                 }
             } catch (_: Exception) {}
-            delay(30_000)
+            delay(settings.getPollIntervalSeconds() * 1000L)
         }
     }
 
@@ -235,7 +235,7 @@ fun StreamingScreen(
                         val currentId = camera?.currentCameraId
                         try {
                             if (currentId == "0") {
-                                camera?.switchCamera("1")
+                                camera.switchCamera("1")
                                 isFrontCamera = true
                             } else {
                                 camera?.switchCamera("0")

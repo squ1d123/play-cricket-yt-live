@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +46,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     var selectedResolutionIndex by remember { mutableIntStateOf(settings.getResolutionIndex()) }
     var selectedEncoder by remember { mutableStateOf(settings.getVideoEncoder()) }
     var selectedPrivacy by remember { mutableStateOf(settings.getPrivacy()) }
+    var pollIntervalSeconds by remember { mutableIntStateOf(settings.getPollIntervalSeconds()) }
     var ytEmail by remember { mutableStateOf(ytService.currentEmail) }
     var snackMessage by remember { mutableStateOf<String?>(null) }
 
@@ -103,6 +105,23 @@ fun SettingsScreen(onBack: () -> Unit) {
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
+
+            // Poll interval
+            Text("Score Overlay Poll Interval", style = MaterialTheme.typography.titleMedium)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Slider(
+                    value = pollIntervalSeconds.toFloat(),
+                    onValueChange = { pollIntervalSeconds = it.toInt() },
+                    valueRange = 5f..60f,
+                    steps = 10,
+                    modifier = Modifier.weight(1f)
+                )
+                Text("${pollIntervalSeconds}s", modifier = Modifier.width(48.dp))
+            }
 
             HorizontalDivider()
 
@@ -185,6 +204,7 @@ fun SettingsScreen(onBack: () -> Unit) {
             Button(
                 onClick = {
                     settings.saveScorecardUrl(scorecardUrl.trim())
+                    settings.savePollIntervalSeconds(pollIntervalSeconds)
                     settings.saveBitrate(StreamSettingsRepository.bitratePresets[selectedBitrateIndex].bitrate)
                     settings.saveResolutionIndex(selectedResolutionIndex)
                     settings.saveVideoEncoder(selectedEncoder)

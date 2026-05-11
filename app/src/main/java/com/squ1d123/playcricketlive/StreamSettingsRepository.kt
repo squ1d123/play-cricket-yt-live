@@ -31,10 +31,14 @@ class StreamSettingsRepository(context: Context) {
         const val DEFAULT_RESOLUTION_INDEX = 1
         const val DEFAULT_ENCODER = "h264"
         const val DEFAULT_PRIVACY = "public"
+        const val DEFAULT_POLL_INTERVAL_SECONDS = 10
     }
 
     fun getScorecardUrl(): String = prefs.getString("scorecard_url", "") ?: ""
     fun saveScorecardUrl(url: String) = prefs.edit().putString("scorecard_url", url).apply()
+
+    fun getPollIntervalSeconds(): Int = prefs.getInt("poll_interval_seconds", DEFAULT_POLL_INTERVAL_SECONDS)
+    fun savePollIntervalSeconds(seconds: Int) = prefs.edit().putInt("poll_interval_seconds", seconds).apply()
 
     fun getBitrate(): Int = prefs.getInt("bitrate", bitratePresets[DEFAULT_BITRATE_INDEX].bitrate)
     fun saveBitrate(bitrate: Int) = prefs.edit().putInt("bitrate", bitrate).apply()
