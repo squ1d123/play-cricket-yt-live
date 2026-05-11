@@ -4,7 +4,9 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.view.SurfaceHolder
 import android.view.WindowManager
 import android.widget.Toast
@@ -92,6 +94,7 @@ fun StreamingScreen(
     val scope = rememberCoroutineScope()
 
     var isStreaming by remember { mutableStateOf(false) }
+    var isRecording by remember { mutableStateOf(false) }
     var hasPermissions by remember { mutableStateOf(false) }
     var cameraReady by remember { mutableStateOf(false) }
     var showOverlay by remember { mutableStateOf(true) }
@@ -208,12 +211,22 @@ fun StreamingScreen(
                     color = if (isStreaming) Color.Red else Color.Gray,
                     shape = MaterialTheme.shapes.small
                 ) {
-                    Text(
-                        if (isStreaming) " ● LIVE " else " OFFLINE ",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (isRecording) {
+                            Surface(color = Color.White, shape = CircleShape) {
+                                Box(Modifier.size(8.dp))
+                            }
+                        }
+                        Text(
+                            if (isStreaming) "● LIVE" else "OFFLINE",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -258,6 +271,10 @@ fun StreamingScreen(
                             val camera = getRtmpCamera() ?: return@clickable
                             if (isStreaming) {
                                 camera.stopStream()
+                                if (settings.isRecordingEnabled() && camera.isRecording) {
+                                    camera.stopRecord()
+                                    isRecording = false
+                                }
                                 isStreaming = false
                             } else {
                                 if (!ytService.isSignedIn) {
@@ -273,6 +290,15 @@ fun StreamingScreen(
                                     if (url != null) {
                                         camera.startStream(url)
                                         isStreaming = true
+                                        if (settings.isRecordingEnabled()) {
+                                            val moviesDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES)
+                                            val appDir = java.io.File(moviesDir, "play-cricket-live")
+                                            appDir.mkdirs()
+                                            val timestamp = java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())
+                                            val filePath = java.io.File(appDir, "stream_$timestamp.mp4").absolutePath
+                                            camera.startRecord(filePath)
+                                            isRecording = true
+                                        }
                                     } else {
                                         Toast.makeText(context, "Failed to create broadcast", Toast.LENGTH_SHORT).show()
                                     }

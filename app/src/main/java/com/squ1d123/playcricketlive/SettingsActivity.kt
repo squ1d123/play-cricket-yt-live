@@ -47,6 +47,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     var selectedEncoder by remember { mutableStateOf(settings.getVideoEncoder()) }
     var selectedPrivacy by remember { mutableStateOf(settings.getPrivacy()) }
     var pollIntervalSeconds by remember { mutableIntStateOf(settings.getPollIntervalSeconds()) }
+    var recordingEnabled by remember { mutableStateOf(settings.isRecordingEnabled()) }
     var ytEmail by remember { mutableStateOf(ytService.currentEmail) }
     var snackMessage by remember { mutableStateOf<String?>(null) }
 
@@ -121,6 +122,26 @@ fun SettingsScreen(onBack: () -> Unit) {
                     modifier = Modifier.weight(1f)
                 )
                 Text("${pollIntervalSeconds}s", modifier = Modifier.width(48.dp))
+            }
+
+            // Recording toggle
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Record Locally", style = MaterialTheme.typography.bodyLarge)
+                Switch(
+                    checked = recordingEnabled,
+                    onCheckedChange = { recordingEnabled = it }
+                )
+            }
+            if (recordingEnabled) {
+                Text(
+                    "Recordings saved to Movies/play-cricket-live/",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
             }
 
             HorizontalDivider()
@@ -205,6 +226,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                 onClick = {
                     settings.saveScorecardUrl(scorecardUrl.trim())
                     settings.savePollIntervalSeconds(pollIntervalSeconds)
+                    settings.saveRecordingEnabled(recordingEnabled)
                     settings.saveBitrate(StreamSettingsRepository.bitratePresets[selectedBitrateIndex].bitrate)
                     settings.saveResolutionIndex(selectedResolutionIndex)
                     settings.saveVideoEncoder(selectedEncoder)

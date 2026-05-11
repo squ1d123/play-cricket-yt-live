@@ -58,4 +58,10 @@ class StreamSettingsRepository(context: Context) {
 
     fun getPrivacy(): String = prefs.getString("stream_privacy", DEFAULT_PRIVACY) ?: DEFAULT_PRIVACY
     fun savePrivacy(privacy: String) = prefs.edit().putString("stream_privacy", privacy).apply()
+
+    fun isRecordingEnabled(): Boolean = prefs.getBoolean("recording_enabled", false)
+    fun saveRecordingEnabled(enabled: Boolean) = prefs.edit().putBoolean("recording_enabled", enabled).apply()
+
+    fun getRecordingPath(): String = prefs.getString("recording_path", "") ?: ""
+    fun saveRecordingPath(path: String) = prefs.edit().putString("recording_path", path).apply()
 }
