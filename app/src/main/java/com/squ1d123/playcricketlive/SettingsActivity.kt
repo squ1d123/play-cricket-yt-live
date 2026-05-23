@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
 import kotlinx.coroutines.launch
 
 class SettingsActivity : ComponentActivity() {
@@ -145,6 +146,48 @@ fun SettingsScreen(onBack: () -> Unit) {
             }
 
             HorizontalDivider()
+
+            // Auto-determine quality
+            Text("Stream Quality", style = MaterialTheme.typography.titleMedium)
+            var speedTestRunning by remember { mutableStateOf(false) }
+            var speedTestStatus by remember { mutableStateOf<String?>(null) }
+
+            Button(
+                onClick = {
+                    speedTestRunning = true
+                    speedTestStatus = null
+                    scope.launch {
+                        try {
+                            val result = UploadSpeedTest.run { status ->
+                                speedTestStatus = status
+                            }
+                            selectedBitrateIndex = result.recommendedBitrateIndex
+                            selectedResolutionIndex = result.recommendedResolutionIndex
+                            speedTestStatus = "Done! %.1f Mbps — set to %s / %s".format(
+                                result.uploadMbps,
+                                StreamSettingsRepository.bitratePresets[result.recommendedBitrateIndex].name,
+                                StreamSettingsRepository.resolutionPresets[result.recommendedResolutionIndex].name
+                            )
+                        } catch (e: Exception) {
+                            speedTestStatus = "Speed test failed: ${e.message}"
+                        } finally {
+                            speedTestRunning = false
+                        }
+                    }
+                },
+                enabled = !speedTestRunning,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (speedTestRunning) {
+                    CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp, color = Color.White)
+                    Spacer(Modifier.width(8.dp))
+                }
+                Text(if (speedTestRunning) "Testing..." else "Auto-Determine Quality")
+            }
+
+            if (speedTestStatus != null) {
+                Text(speedTestStatus!!, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
 
             // Bitrate
             var bitrateExpanded by remember { mutableStateOf(false) }
