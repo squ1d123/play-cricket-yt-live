@@ -46,6 +46,7 @@ fun SettingsScreen(onBack: () -> Unit) {
     }
     var selectedResolutionIndex by remember { mutableIntStateOf(settings.getResolutionIndex()) }
     var selectedEncoder by remember { mutableStateOf(settings.getVideoEncoder()) }
+    var selectedFpsIndex by remember { mutableIntStateOf(settings.getFpsIndex()) }
     var selectedPrivacy by remember { mutableStateOf(settings.getPrivacy()) }
     var pollIntervalSeconds by remember { mutableIntStateOf(settings.getPollIntervalSeconds()) }
     var recordingEnabled by remember { mutableStateOf(settings.isRecordingEnabled()) }
@@ -244,6 +245,25 @@ fun SettingsScreen(onBack: () -> Unit) {
                 }
             }
 
+            // Frame rate
+            Text("Frame Rate", style = MaterialTheme.typography.titleMedium)
+            var fpsExpanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(expanded = fpsExpanded, onExpandedChange = { fpsExpanded = it }) {
+                OutlinedTextField(
+                    value = StreamSettingsRepository.fpsPresets[selectedFpsIndex].name,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("FPS") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(fpsExpanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
+                ExposedDropdownMenu(expanded = fpsExpanded, onDismissRequest = { fpsExpanded = false }) {
+                    StreamSettingsRepository.fpsPresets.forEachIndexed { i, preset ->
+                        DropdownMenuItem(text = { Text(preset.name) }, onClick = { selectedFpsIndex = i; fpsExpanded = false })
+                    }
+                }
+            }
+
             // Stream privacy
             var privacyExpanded by remember { mutableStateOf(false) }
             ExposedDropdownMenuBox(expanded = privacyExpanded, onExpandedChange = { privacyExpanded = it }) {
@@ -273,6 +293,7 @@ fun SettingsScreen(onBack: () -> Unit) {
                     settings.saveBitrate(StreamSettingsRepository.bitratePresets[selectedBitrateIndex].bitrate)
                     settings.saveResolutionIndex(selectedResolutionIndex)
                     settings.saveVideoEncoder(selectedEncoder)
+                    settings.saveFpsIndex(selectedFpsIndex)
                     settings.savePrivacy(selectedPrivacy)
                     snackMessage = "Settings saved!"
                 },

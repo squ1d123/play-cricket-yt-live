@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 
 data class BitratePreset(val name: String, val bitrate: Int)
 data class ResolutionPreset(val name: String, val width: Int, val height: Int, val youtubeResolution: String)
+data class FpsPreset(val name: String, val fps: Int)
 
 class StreamSettingsRepository(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("stream_settings", Context.MODE_PRIVATE)
@@ -25,10 +26,16 @@ class StreamSettingsRepository(context: Context) {
             ResolutionPreset("4K", 3840, 2160, "2160p"),
         )
 
+        val fpsPresets = listOf(
+            FpsPreset("30 fps", 30),
+            FpsPreset("60 fps", 60),
+        )
+
         val privacyOptions = listOf("public" to "Public", "unlisted" to "Unlisted", "private" to "Private")
 
         const val DEFAULT_BITRATE_INDEX = 1
         const val DEFAULT_RESOLUTION_INDEX = 1
+        const val DEFAULT_FPS_INDEX = 1
         const val DEFAULT_ENCODER = "h264"
         const val DEFAULT_PRIVACY = "public"
         const val DEFAULT_POLL_INTERVAL_SECONDS = 10
@@ -64,4 +71,9 @@ class StreamSettingsRepository(context: Context) {
 
     fun getRecordingPath(): String = prefs.getString("recording_path", "") ?: ""
     fun saveRecordingPath(path: String) = prefs.edit().putString("recording_path", path).apply()
+
+    fun getFpsIndex(): Int = prefs.getInt("fps", DEFAULT_FPS_INDEX)
+    fun saveFpsIndex(index: Int) = prefs.edit().putInt("fps", index).apply()
+    fun getFps(): Int = fpsPresets[getFpsIndex().coerceIn(0, fpsPresets.lastIndex)].fps
+    fun getYoutubeFps(): String = "${getFps()}fps"
 }

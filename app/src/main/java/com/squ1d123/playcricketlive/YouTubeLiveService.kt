@@ -107,7 +107,7 @@ class YouTubeLiveService(private val context: Context) {
                 listOf("snippet", "cdn"),
                 LiveStream()
                     .setSnippet(LiveStreamSnippet().setTitle("$title - Stream"))
-                    .setCdn(CdnSettings().setFrameRate("60fps").setIngestionType("rtmp").setResolution(resolution))
+                    .setCdn(CdnSettings().setFrameRate(settings.getYoutubeFps()).setIngestionType("rtmp").setResolution(resolution))
             ).execute()
 
             val streamId = stream.id
